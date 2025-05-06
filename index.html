@@ -1,115 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retro Bubbles Background</title>
-    <style>
-        body {
-            background: linear-gradient(45deg, #ff9a9e, #fad0c4, #fbc2eb, #a18cd1);
-            background-size: 400% 400%;
-            animation: gradientShift 10s ease infinite;
-            overflow: hidden;
-            margin: 0;
-            height: 100vh;
-            position: relative;
-            font-family: sans-serif;
-        }
-
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .bubble {
-            position: absolute;
-            bottom: -50px;
-            background-color: rgba(255, 255, 255, 0.7);
-            border-radius: 50%;
-            opacity: 1;
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.9);
-            animation: rise 8s linear infinite, sway 5s ease-in-out infinite alternate;
-        }
-
-        @keyframes rise {
-            0% { bottom: -50px; opacity: 1; }
-            100% { bottom: 100vh; opacity: 0; }
-        }
-
-        @keyframes sway {
-            0% { transform: translateX(-40px); }
-            100% { transform: translateX(40px); }
-        }
-
-        .controls {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 10px;
-            border-radius: 10px;
-            backdrop-filter: blur(5px);
-            color: #fff;
-        }
-
-        .controls label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 14px;
-        }
-
-        .controls input {
-            width: 100%;
-            margin-bottom: 10px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Crane Reach Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: auto;
+      background-color: #1e1e1e;
+      color: #f0f0f0;
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+    }
+    input[type="number"] {
+      background-color: #333;
+      color: #fff;
+      border: 1px solid #666;
+      padding: 5px;
+      border-radius: 4px;
+    }
+    canvas {
+      border: 1px solid #ccc;
+      margin-top: 20px;
+      background-color: #2a2a2a;
+    }
+    .input-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .input-group label {
+      flex: 1 0 200px;
+    }
+  </style>
 </head>
 <body>
-    <div class="controls">
-        <label for="bubbleCount">Bubble Frequency</label>
-        <input type="range" id="bubbleCount" min="10" max="200" value="80">
+  <h1>Crane Reach Calculator</h1>
 
-        <label for="bubbleSize">Bubble Size</label>
-        <input type="range" id="bubbleSize" min="10" max="100" value="40">
-    </div>
+  <div class="input-group">
+    <label>Distance to Roof (ft): <input type="number" id="distanceToRoof" value="150"></label>
+    <label>Roof Height (ft): <input type="number" id="roofHeight" value="25"></label>
+    <label>Tree Height (ft): <input type="number" id="treeHeight" value="41"></label>
+    <label>Tree Distance from Crane (ft): <input type="number" id="treeDistance" value="48"></label>
+    <label>Max Boom Length (ft): <input type="number" id="maxBoomLength" value="250"></label>
+  </div>
 
-    <script>
-        let bubbleInterval;
-        let bubbleFrequency = 80;
-        let bubbleMaxSize = 40;
+  <p id="results"></p>
 
-        function createBubble() {
-            const bubble = document.createElement("div");
-            bubble.classList.add("bubble");
-            document.body.appendChild(bubble);
+  <canvas id="diagram" width="1600" height="800"></canvas>
 
-            const size = Math.random() * bubbleMaxSize + 20;
-            bubble.style.width = `${size}px`;
-            bubble.style.height = `${size}px`;
-            bubble.style.left = `${Math.random() * 100}vw`;
-            bubble.style.animationDuration = `${Math.random() * 6 + 4}s, ${Math.random() * 5 + 3}s`;
+  <script>
+    const canvas = document.getElementById('diagram');
+    const ctx = canvas.getContext('2d');
 
-            setTimeout(() => {
-                bubble.remove();
-            }, 9000);
-        }
+    const inputs = [
+      'distanceToRoof', 'roofHeight', 'treeHeight', 'treeDistance', 'maxBoomLength'
+    ];
 
-        function startBubbles() {
-            clearInterval(bubbleInterval);
-            bubbleInterval = setInterval(createBubble, bubbleFrequency);
-        }
+    inputs.forEach(id => {
+      document.getElementById(id).addEventListener('input', draw);
+    });
 
-        document.getElementById('bubbleCount').addEventListener('input', (e) => {
-            bubbleFrequency = parseInt(e.target.value);
-            startBubbles();
-        });
+    function draw() {
+      const distanceToRoof = parseFloat(document.getElementById('distanceToRoof').value);
+      const roofHeight = parseFloat(document.getElementById('roofHeight').value);
+      const treeHeight = parseFloat(document.getElementById('treeHeight').value);
+      const treeDistance = parseFloat(document.getElementById('treeDistance').value);
+      const maxBoomLength = parseFloat(document.getElementById('maxBoomLength').value);
 
-        document.getElementById('bubbleSize').addEventListener('input', (e) => {
-            bubbleMaxSize = parseInt(e.target.value);
-        });
+      let boomAngleRad = Math.atan(roofHeight / distanceToRoof);
+      const treeAngle = Math.atan(treeHeight / treeDistance);
+      if (boomAngleRad < treeAngle) {
+        boomAngleRad = treeAngle;
+      }
 
-        startBubbles();
-    </script>
+      const boomAngleDeg = boomAngleRad * 180 / Math.PI;
+      const boomLength = distanceToRoof / Math.cos(boomAngleRad);
+
+      const isReachable = boomLength <= maxBoomLength;
+
+      document.getElementById('results').innerText =
+        `Calculated Boom Length: ${boomLength.toFixed(1)} ft\n` +
+        `At Boom Angle: ${boomAngleDeg.toFixed(1)}°\n` +
+        `Reachable with Max Boom: ${isReachable ? "YES" : "NO"}`;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const scale = 4;
+      const baseX = 50;
+      const baseY = canvas.height - 50;
+
+      // Draw grid along bottom for distance markers
+      ctx.strokeStyle = '#444';
+      ctx.fillStyle = '#888';
+      ctx.font = '12px Arial';
+      for (let i = 0; i <= (canvas.width - baseX) / scale; i += 10) {
+        const x = baseX + i * scale;
+        ctx.beginPath();
+        ctx.moveTo(x, baseY);
+        ctx.lineTo(x, baseY + 5);
+        ctx.stroke();
+        ctx.fillText(i.toString(), x - 5, baseY + 18);
+      }
+
+      // Draw ground
+      ctx.strokeStyle = '#fff';
+      ctx.beginPath();
+      ctx.moveTo(baseX, baseY);
+      ctx.lineTo(canvas.width - 50, baseY);
+      ctx.stroke();
+
+      // Tree
+      const treeX = baseX + treeDistance * scale;
+      const treeTopY = baseY - treeHeight * scale;
+      ctx.strokeStyle = 'brown';
+      ctx.beginPath();
+      ctx.moveTo(treeX, baseY);
+      ctx.lineTo(treeX, treeTopY);
+      ctx.stroke();
+      ctx.fillStyle = 'darkgreen';
+      ctx.beginPath();
+      ctx.arc(treeX, treeTopY, 10, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Draw building from 58ft to 300ft
+      const buildingStartX = baseX + 58 * scale;
+      const buildingEndX = baseX + 300 * scale;
+      const buildingTopY = baseY - roofHeight * scale;
+      ctx.fillStyle = 'green';
+      ctx.fillRect(buildingStartX, buildingTopY, buildingEndX - buildingStartX, roofHeight * scale);
+
+      // Boom end point
+      const boomX = baseX + Math.cos(boomAngleRad) * boomLength * scale;
+      const boomY = baseY - Math.sin(boomAngleRad) * boomLength * scale;
+
+      // Draw Boom
+      ctx.strokeStyle = 'blue';
+      ctx.beginPath();
+      ctx.moveTo(baseX, baseY);
+      ctx.lineTo(boomX, boomY);
+      ctx.stroke();
+
+      // Draw tether to roof
+      ctx.strokeStyle = 'yellow';
+      ctx.beginPath();
+      ctx.moveTo(boomX, boomY);
+      ctx.lineTo(boomX, baseY - roofHeight * scale);
+      ctx.stroke();
+
+      // Draw base
+      ctx.strokeStyle = 'gray';
+      ctx.beginPath();
+      ctx.moveTo(baseX, baseY);
+      ctx.lineTo(boomX, baseY);
+      ctx.stroke();
+
+      // Roof marker
+      ctx.strokeStyle = 'green';
+      ctx.beginPath();
+      ctx.moveTo(boomX - 10, boomY);
+      ctx.lineTo(boomX + 10, boomY);
+      ctx.stroke();
+
+      // Angle arc
+      const arcRadius = 40;
+      ctx.beginPath();
+      ctx.strokeStyle = '#f0f0f0';
+      ctx.arc(baseX, baseY, arcRadius, -boomAngleRad, 0, false);
+      ctx.stroke();
+      ctx.fillStyle = '#f0f0f0';
+      ctx.font = "14px Arial";
+      ctx.fillText(`${boomAngleDeg.toFixed(1)}°`, baseX + 10, baseY - 10);
+    }
+
+    draw();
+  </script>
 </body>
 </html>
