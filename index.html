@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retro Bubbles Background</title>
+    <style>
+        body {
+            background: linear-gradient(45deg, #ff9a9e, #fad0c4, #fbc2eb, #a18cd1);
+            background-size: 400% 400%;
+            animation: gradientShift 10s ease infinite;
+            overflow: hidden;
+            margin: 0;
+            height: 100vh;
+            position: relative;
+            font-family: sans-serif;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .bubble {
+            position: absolute;
+            bottom: -50px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            opacity: 1;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.9);
+            animation: rise 8s linear infinite, sway 5s ease-in-out infinite alternate;
+        }
+
+        @keyframes rise {
+            0% { bottom: -50px; opacity: 1; }
+            100% { bottom: 100vh; opacity: 0; }
+        }
+
+        @keyframes sway {
+            0% { transform: translateX(-40px); }
+            100% { transform: translateX(40px); }
+        }
+
+        .controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+            color: #fff;
+        }
+
+        .controls label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .controls input {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <label for="bubbleCount">Bubble Frequency</label>
+        <input type="range" id="bubbleCount" min="10" max="200" value="80">
+
+        <label for="bubbleSize">Bubble Size</label>
+        <input type="range" id="bubbleSize" min="10" max="100" value="40">
+    </div>
+
+    <script>
+        let bubbleInterval;
+        let bubbleFrequency = 80;
+        let bubbleMaxSize = 40;
+
+        function createBubble() {
+            const bubble = document.createElement("div");
+            bubble.classList.add("bubble");
+            document.body.appendChild(bubble);
+
+            const size = Math.random() * bubbleMaxSize + 20;
+            bubble.style.width = `${size}px`;
+            bubble.style.height = `${size}px`;
+            bubble.style.left = `${Math.random() * 100}vw`;
+            bubble.style.animationDuration = `${Math.random() * 6 + 4}s, ${Math.random() * 5 + 3}s`;
+
+            setTimeout(() => {
+                bubble.remove();
+            }, 9000);
+        }
+
+        function startBubbles() {
+            clearInterval(bubbleInterval);
+            bubbleInterval = setInterval(createBubble, bubbleFrequency);
+        }
+
+        document.getElementById('bubbleCount').addEventListener('input', (e) => {
+            bubbleFrequency = parseInt(e.target.value);
+            startBubbles();
+        });
+
+        document.getElementById('bubbleSize').addEventListener('input', (e) => {
+            bubbleMaxSize = parseInt(e.target.value);
+        });
+
+        startBubbles();
+    </script>
+</body>
+</html>
