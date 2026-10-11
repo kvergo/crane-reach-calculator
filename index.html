@@ -28,9 +28,9 @@
     
     .main-layout {
       display: grid;
-      grid-template-columns: 320px 1fr;
+      grid-template-columns: 380px 1fr;
       gap: 16px;
-      max-width: 1600px;
+      max-width: 1800px;
       margin: 0 auto;
     }
     
@@ -68,6 +68,10 @@
       gap: 8px;
     }
     
+    .input-group.triple {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+    
     .input-group.single {
       grid-template-columns: 1fr;
     }
@@ -83,7 +87,8 @@
       color: #bbb;
     }
     
-    .input-wrapper input[type="number"] {
+    .input-wrapper input[type="number"],
+    .input-wrapper select {
       background-color: #333;
       color: #fff;
       border: 1px solid #555;
@@ -93,7 +98,8 @@
       width: 100%;
     }
     
-    .input-wrapper input[type="number"]:focus {
+    .input-wrapper input[type="number"]:focus,
+    .input-wrapper select:focus {
       outline: none;
       border-color: #4a9eff;
     }
@@ -129,10 +135,100 @@
       font-size: 0.85rem;
     }
     
+    .units-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    
+    .unit-cell {
+      background: #333;
+      border: 1px solid #555;
+      border-radius: 4px;
+      padding: 4px;
+      text-align: center;
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .unit-cell:hover {
+      border-color: #4a9eff;
+    }
+    
+    .unit-cell.two-story {
+      background: #3d5a3d;
+      border-color: #4a7a4a;
+    }
+    
+    .unit-cell.selected {
+      border-color: #f97316;
+      background: #5a3d2a;
+    }
+    
+    .unit-cell .unit-num {
+      font-weight: bold;
+      color: #fff;
+    }
+    
+    .unit-cell .unit-height {
+      color: #aaa;
+      font-size: 0.65rem;
+    }
+    
+    .unit-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #444;
+    }
+    
+    .unit-controls .input-wrapper label {
+      font-size: 0.7rem;
+    }
+    
+    .unit-controls input {
+      padding: 4px 6px;
+      font-size: 0.8rem;
+    }
+    
+    .preset-buttons {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    
+    .preset-btn {
+      flex: 1;
+      padding: 6px 8px;
+      background: #444;
+      border: 1px solid #555;
+      border-radius: 4px;
+      color: #fff;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .preset-btn:hover {
+      background: #555;
+      border-color: #666;
+    }
+    
     .results-section {
       background: #2a2a2a;
       border-radius: 8px;
       padding: 12px;
+    }
+    
+    .results-section h2 {
+      font-size: 0.85rem;
+      margin: 0 0 10px 0;
+      color: #aaa;
+      text-transform: uppercase;
     }
     
     .results-grid {
@@ -166,10 +262,6 @@
     
     .result-item.not-reachable .value {
       color: #ff6b6b;
-    }
-    
-    .result-item.full-width {
-      grid-column: 1 / -1;
     }
     
     .view-3d-container {
@@ -212,7 +304,7 @@
     
     #canvas-2d {
       width: 100%;
-      height: 200px;
+      height: 180px;
       background: #1a1a1a;
       border-radius: 4px;
     }
@@ -240,7 +332,8 @@
       border-radius: 3px;
     }
     
-    .legend-color.building { background: #22c55e; }
+    .legend-color.building-1 { background: #22c55e; }
+    .legend-color.building-2 { background: #16a34a; }
     .legend-color.ac-unit { background: #f97316; }
     .legend-color.tree { background: #8b4513; }
     .legend-color.crane { background: #4a9eff; }
@@ -280,85 +373,116 @@
         <div class="input-group">
           <div class="input-wrapper">
             <label for="craneX">Crane X (ft)</label>
-            <input type="number" id="craneX" value="-20" step="1">
-            <div class="error-message" id="craneX-error"></div>
+            <input type="number" id="craneX" value="-30" step="1">
           </div>
           <div class="input-wrapper">
             <label for="craneY">Crane Y (ft)</label>
-            <input type="number" id="craneY" value="50" step="1">
-            <div class="error-message" id="craneY-error"></div>
+            <input type="number" id="craneY" value="40" step="1">
           </div>
           <div class="input-wrapper">
             <label for="pivotHeight">Pivot Height (ft)</label>
             <input type="number" id="pivotHeight" value="8" step="0.5">
-            <div class="error-message" id="pivotHeight-error"></div>
           </div>
           <div class="input-wrapper">
             <label for="maxBoomLength">Max Boom (ft)</label>
             <input type="number" id="maxBoomLength" value="250" step="1">
-            <div class="error-message" id="maxBoomLength-error"></div>
           </div>
         </div>
         <div class="input-group single">
           <div class="input-wrapper">
             <label for="safetyMargin">Safety Clearance (ft)</label>
             <input type="number" id="safetyMargin" value="5" step="0.5">
-            <div class="error-message" id="safetyMargin-error"></div>
           </div>
         </div>
         <div class="instructions">
-          Drag the blue crane marker on the ground plane to reposition, or enter coordinates above.
+          Drag the blue crane marker on the ground plane, or enter coordinates above.
         </div>
       </div>
 
       <div class="input-section">
-        <h2>Building</h2>
+        <h2>Building Row (12 Units)</h2>
+        <p style="font-size: 0.75rem; color: #888; margin: 0 0 8px 0;">
+          Click a unit to select it for the AC. Green = 2-story, darker = 1-story.
+        </p>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+          <span style="font-size: 0.7rem; color: #f97316; font-weight: bold;">← WEST</span>
+          <div class="units-grid" id="units-grid" style="flex: 1;"></div>
+          <span style="font-size: 0.7rem; color: #888;">EAST →</span>
+        </div>
+        
         <div class="input-group">
           <div class="input-wrapper">
-            <label for="buildingX">Position X (ft)</label>
+            <label for="buildingX">Row Start X (ft)</label>
             <input type="number" id="buildingX" value="0" step="1">
-            <div class="error-message" id="buildingX-error"></div>
           </div>
           <div class="input-wrapper">
-            <label for="buildingY">Position Y (ft)</label>
-            <input type="number" id="buildingY" value="0" step="1">
-            <div class="error-message" id="buildingY-error"></div>
+            <label for="buildingY">Row Start Y (ft)</label>
+            <input type="number" id="buildingY" value="20" step="1">
+          </div>
+        </div>
+        <div class="input-group">
+          <div class="input-wrapper">
+            <label for="buildingDepth">Building Depth (ft)</label>
+            <input type="number" id="buildingDepth" value="40" step="1">
           </div>
           <div class="input-wrapper">
-            <label for="buildingLength">Length/X (ft)</label>
-            <input type="number" id="buildingLength" value="120" step="1">
-            <div class="error-message" id="buildingLength-error"></div>
+            <label for="oneStoryHeight">1-Story Height (ft)</label>
+            <input type="number" id="oneStoryHeight" value="14" step="1">
           </div>
+        </div>
+        <div class="input-group single">
           <div class="input-wrapper">
-            <label for="buildingWidth">Width/Y (ft)</label>
-            <input type="number" id="buildingWidth" value="80" step="1">
-            <div class="error-message" id="buildingWidth-error"></div>
+            <label for="twoStoryHeight">2-Story Height (ft)</label>
+            <input type="number" id="twoStoryHeight" value="25" step="1">
           </div>
-          <div class="input-wrapper">
-            <label for="roofHeight">Roof Height (ft)</label>
-            <input type="number" id="roofHeight" value="25" step="1">
-            <div class="error-message" id="roofHeight-error"></div>
+        </div>
+        
+        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #444;">
+          <p style="font-size: 0.75rem; color: #aaa; margin: 0 0 6px 0;">
+            <strong>Selected Unit: <span id="selected-unit-label">Unit 5 from West</span></strong>
+          </p>
+          <div class="unit-controls">
+            <div class="input-wrapper">
+              <label>Width (ft)</label>
+              <input type="number" id="selectedUnitWidth" value="20" step="1">
+            </div>
+            <div class="input-wrapper">
+              <label>Stories</label>
+              <select id="selectedUnitStories">
+                <option value="1">1-Story</option>
+                <option value="2">2-Story</option>
+              </select>
+            </div>
+            <div class="input-wrapper">
+              <label>AC on this?</label>
+              <select id="acUnitSelect" disabled>
+                <option value="yes">Yes</option>
+              </select>
+            </div>
           </div>
+        </div>
+        
+        <div class="preset-buttons">
+          <button class="preset-btn" onclick="applyPreset('described')">Owner's Layout</button>
+          <button class="preset-btn" onclick="applyPreset('all1')">All 1-Story</button>
+          <button class="preset-btn" onclick="applyPreset('all2')">All 2-Story</button>
         </div>
       </div>
 
       <div class="input-section">
-        <h2>AC Unit (Lift Target)</h2>
+        <h2>AC Unit Position</h2>
         <div class="input-group">
           <div class="input-wrapper">
-            <label for="unitX">Position X (ft)</label>
-            <input type="number" id="unitX" value="60" step="1">
-            <div class="error-message" id="unitX-error"></div>
+            <label for="unitOffsetX">Offset from Unit Edge (ft)</label>
+            <input type="number" id="unitOffsetX" value="10" step="1">
           </div>
           <div class="input-wrapper">
-            <label for="unitY">Position Y (ft)</label>
-            <input type="number" id="unitY" value="40" step="1">
-            <div class="error-message" id="unitY-error"></div>
+            <label for="unitOffsetY">Offset from Front (ft)</label>
+            <input type="number" id="unitOffsetY" value="20" step="1">
           </div>
           <div class="input-wrapper">
-            <label for="unitHeight">Height (ft)</label>
+            <label for="unitHeight">AC Height (ft)</label>
             <input type="number" id="unitHeight" value="3" step="0.5">
-            <div class="error-message" id="unitHeight-error"></div>
           </div>
         </div>
       </div>
@@ -368,23 +492,19 @@
         <div class="input-group">
           <div class="input-wrapper">
             <label for="treeX">Position X (ft)</label>
-            <input type="number" id="treeX" value="-10" step="1">
-            <div class="error-message" id="treeX-error"></div>
+            <input type="number" id="treeX" value="-15" step="1">
           </div>
           <div class="input-wrapper">
             <label for="treeY">Position Y (ft)</label>
-            <input type="number" id="treeY" value="30" step="1">
-            <div class="error-message" id="treeY-error"></div>
+            <input type="number" id="treeY" value="35" step="1">
           </div>
           <div class="input-wrapper">
             <label for="treeHeight">Height (ft)</label>
             <input type="number" id="treeHeight" value="41" step="1">
-            <div class="error-message" id="treeHeight-error"></div>
           </div>
           <div class="input-wrapper">
             <label for="treeRadius">Canopy Radius (ft)</label>
             <input type="number" id="treeRadius" value="8" step="1">
-            <div class="error-message" id="treeRadius-error"></div>
           </div>
         </div>
         <div class="checkbox-wrapper">
@@ -419,15 +539,17 @@
 
     <div class="view-panel">
       <div class="view-3d-container">
-        <h3>3D Site View (drag to orbit, scroll to zoom, drag crane to reposition)</h3>
+        <h3>3D Site View — Building runs West→East (orange arrow = West)</h3>
         <canvas id="canvas-3d"></canvas>
         <div class="legend">
-          <div class="legend-item"><span class="legend-color building"></span> Building</div>
+          <div class="legend-item"><span class="legend-color" style="background: #f97316;"></span> West</div>
+          <div class="legend-item"><span class="legend-color building-2"></span> 2-Story</div>
+          <div class="legend-item"><span class="legend-color building-1"></span> 1-Story</div>
           <div class="legend-item"><span class="legend-color ac-unit"></span> AC Unit</div>
           <div class="legend-item"><span class="legend-color tree"></span> Tree</div>
           <div class="legend-item"><span class="legend-color crane"></span> Crane</div>
           <div class="legend-item"><span class="legend-color boom"></span> Boom</div>
-          <div class="legend-item"><span class="legend-color reachable"></span> Reachable Zone</div>
+          <div class="legend-item"><span class="legend-color reachable"></span> Reachable</div>
           <div class="legend-item"><span class="legend-color unreachable"></span> Unreachable</div>
         </div>
       </div>
@@ -445,156 +567,172 @@
     let isDraggingCrane = false;
     let raycaster, mouse;
     
+    const DEFAULT_UNIT_WIDTH = 20;
+    
+    let units = [];
+    let selectedUnitIndex = 4; // Unit 5 from west (0-indexed)
+    
+    function initUnits() {
+      units = [];
+      for (let i = 0; i < 12; i++) {
+        let stories = 1;
+        if (i === 0 || i === 1 || i === 5 || i === 6 || i === 10 || i === 11) {
+          stories = 2;
+        }
+        units.push({
+          width: DEFAULT_UNIT_WIDTH,
+          stories: stories
+        });
+      }
+    }
+    
+    function applyPreset(preset) {
+      const oneStoryH = parseFloat(document.getElementById('oneStoryHeight').value) || 14;
+      const twoStoryH = parseFloat(document.getElementById('twoStoryHeight').value) || 25;
+      
+      if (preset === 'described') {
+        for (let i = 0; i < 12; i++) {
+          if (i === 0 || i === 1 || i === 5 || i === 6 || i === 10 || i === 11) {
+            units[i].stories = 2;
+          } else {
+            units[i].stories = 1;
+          }
+          units[i].width = DEFAULT_UNIT_WIDTH;
+        }
+      } else if (preset === 'all1') {
+        for (let i = 0; i < 12; i++) {
+          units[i].stories = 1;
+        }
+      } else if (preset === 'all2') {
+        for (let i = 0; i < 12; i++) {
+          units[i].stories = 2;
+        }
+      }
+      
+      renderUnitsGrid();
+      update();
+    }
+    
+    function renderUnitsGrid() {
+      const grid = document.getElementById('units-grid');
+      grid.innerHTML = '';
+      
+      const oneStoryH = parseFloat(document.getElementById('oneStoryHeight').value) || 14;
+      const twoStoryH = parseFloat(document.getElementById('twoStoryHeight').value) || 25;
+      
+      for (let i = 0; i < 12; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'unit-cell';
+        if (units[i].stories === 2) cell.classList.add('two-story');
+        if (i === selectedUnitIndex) cell.classList.add('selected');
+        
+        const height = units[i].stories === 2 ? twoStoryH : oneStoryH;
+        cell.innerHTML = `<div class="unit-num">${i + 1}</div><div class="unit-height">${height}ft</div>`;
+        cell.onclick = () => selectUnit(i);
+        grid.appendChild(cell);
+      }
+      
+      updateSelectedUnitControls();
+    }
+    
+    function selectUnit(index) {
+      selectedUnitIndex = index;
+      renderUnitsGrid();
+      update();
+    }
+    
+    function updateSelectedUnitControls() {
+      document.getElementById('selected-unit-label').textContent = `Unit ${selectedUnitIndex + 1} from West`;
+      document.getElementById('selectedUnitWidth').value = units[selectedUnitIndex].width;
+      document.getElementById('selectedUnitStories').value = units[selectedUnitIndex].stories;
+    }
+    
+    function onSelectedUnitChange() {
+      units[selectedUnitIndex].width = parseFloat(document.getElementById('selectedUnitWidth').value) || DEFAULT_UNIT_WIDTH;
+      units[selectedUnitIndex].stories = parseInt(document.getElementById('selectedUnitStories').value);
+      renderUnitsGrid();
+      update();
+    }
+    
+    document.getElementById('selectedUnitWidth').addEventListener('input', onSelectedUnitChange);
+    document.getElementById('selectedUnitStories').addEventListener('change', onSelectedUnitChange);
+    document.getElementById('oneStoryHeight').addEventListener('input', () => { renderUnitsGrid(); update(); });
+    document.getElementById('twoStoryHeight').addEventListener('input', () => { renderUnitsGrid(); update(); });
+
     const inputIds = [
       'craneX', 'craneY', 'pivotHeight', 'maxBoomLength', 'safetyMargin',
-      'buildingX', 'buildingY', 'buildingLength', 'buildingWidth', 'roofHeight',
-      'unitX', 'unitY', 'unitHeight',
+      'buildingX', 'buildingY', 'buildingDepth',
+      'unitOffsetX', 'unitOffsetY', 'unitHeight',
       'treeX', 'treeY', 'treeHeight', 'treeRadius', 'ignoreTree'
     ];
 
-    const validationRules = {
-      craneX: { required: true, label: 'Crane X' },
-      craneY: { required: true, label: 'Crane Y' },
-      pivotHeight: { min: 0, required: true, label: 'Pivot height' },
-      maxBoomLength: { min: 1, required: true, label: 'Max boom' },
-      safetyMargin: { min: 0, required: true, label: 'Safety margin' },
-      buildingX: { required: true, label: 'Building X' },
-      buildingY: { required: true, label: 'Building Y' },
-      buildingLength: { min: 1, required: true, label: 'Building length' },
-      buildingWidth: { min: 1, required: true, label: 'Building width' },
-      roofHeight: { min: 0, required: true, label: 'Roof height' },
-      unitX: { required: true, label: 'Unit X' },
-      unitY: { required: true, label: 'Unit Y' },
-      unitHeight: { min: 0, required: true, label: 'Unit height' },
-      treeX: { required: true, label: 'Tree X' },
-      treeY: { required: true, label: 'Tree Y' },
-      treeHeight: { min: 0, required: true, label: 'Tree height' },
-      treeRadius: { min: 0, required: true, label: 'Tree radius' }
-    };
-
-    function validateInput(id, value) {
-      const rules = validationRules[id];
-      if (!rules) return { valid: true, value };
-
-      const errorEl = document.getElementById(`${id}-error`);
-      const inputEl = document.getElementById(id);
-      
-      if (value === '' || value === null || value === undefined) {
-        if (rules.required) {
-          if (errorEl) errorEl.textContent = 'Required';
-          if (inputEl) inputEl.classList.add('error');
-          return { valid: false };
-        }
-      }
-
-      const num = parseFloat(value);
-      
-      if (isNaN(num)) {
-        if (errorEl) errorEl.textContent = 'Invalid';
-        if (inputEl) inputEl.classList.add('error');
-        return { valid: false };
-      }
-
-      if (rules.min !== undefined && num < rules.min) {
-        if (errorEl) errorEl.textContent = `Min: ${rules.min}`;
-        if (inputEl) inputEl.classList.add('error');
-        return { valid: false };
-      }
-
-      if (errorEl) errorEl.textContent = '';
-      if (inputEl) inputEl.classList.remove('error');
-      return { valid: true, value: num };
-    }
-
     function getInputs() {
       const inputs = {};
-      let allValid = true;
-
+      
       for (const id of inputIds) {
         if (id === 'ignoreTree') {
           inputs[id] = document.getElementById(id).checked;
-          continue;
-        }
-        
-        const rawValue = document.getElementById(id).value;
-        const result = validateInput(id, rawValue);
-        
-        if (!result.valid) {
-          allValid = false;
         } else {
-          inputs[id] = result.value;
+          inputs[id] = parseFloat(document.getElementById(id).value) || 0;
         }
       }
-
-      return { valid: allValid, inputs };
+      
+      inputs.oneStoryHeight = parseFloat(document.getElementById('oneStoryHeight').value) || 14;
+      inputs.twoStoryHeight = parseFloat(document.getElementById('twoStoryHeight').value) || 25;
+      inputs.units = units;
+      inputs.selectedUnitIndex = selectedUnitIndex;
+      
+      return inputs;
     }
-
-    function lineIntersectsBox(p0, p1, boxMin, boxMax) {
-      let tMin = 0, tMax = 1;
-      const dir = { x: p1.x - p0.x, y: p1.y - p0.y, z: p1.z - p0.z };
+    
+    function getUnitBounds(inputs) {
+      const bounds = [];
+      let xPos = inputs.buildingX;
       
-      for (const axis of ['x', 'y', 'z']) {
-        if (Math.abs(dir[axis]) < 1e-10) {
-          if (p0[axis] < boxMin[axis] || p0[axis] > boxMax[axis]) return null;
-        } else {
-          const t1 = (boxMin[axis] - p0[axis]) / dir[axis];
-          const t2 = (boxMax[axis] - p0[axis]) / dir[axis];
-          const tNear = Math.min(t1, t2);
-          const tFar = Math.max(t1, t2);
-          tMin = Math.max(tMin, tNear);
-          tMax = Math.min(tMax, tFar);
-          if (tMin > tMax) return null;
-        }
+      for (let i = 0; i < inputs.units.length; i++) {
+        const unit = inputs.units[i];
+        const height = unit.stories === 2 ? inputs.twoStoryHeight : inputs.oneStoryHeight;
+        
+        bounds.push({
+          index: i,
+          x: xPos,
+          y: inputs.buildingY,
+          width: unit.width,
+          depth: inputs.buildingDepth,
+          height: height,
+          stories: unit.stories
+        });
+        
+        xPos += unit.width;
       }
       
-      return { tMin, tMax };
+      return bounds;
     }
-
-    function lineIntersectsCylinder(p0, p1, cx, cy, radius, height) {
-      const dx = p1.x - p0.x;
-      const dy = p1.y - p0.y;
-      const dz = p1.z - p0.z;
+    
+    function getACPosition(inputs) {
+      const bounds = getUnitBounds(inputs);
+      const selectedUnit = bounds[inputs.selectedUnitIndex];
       
-      const fx = p0.x - cx;
-      const fy = p0.y - cy;
-      
-      const a = dx * dx + dy * dy;
-      const b = 2 * (fx * dx + fy * dy);
-      const c = fx * fx + fy * fy - radius * radius;
-      
-      const discriminant = b * b - 4 * a * c;
-      if (discriminant < 0) return null;
-      
-      const sqrtD = Math.sqrt(discriminant);
-      let t1 = (-b - sqrtD) / (2 * a);
-      let t2 = (-b + sqrtD) / (2 * a);
-      
-      if (t1 > t2) [t1, t2] = [t2, t1];
-      
-      const hits = [];
-      for (const t of [t1, t2]) {
-        if (t >= 0 && t <= 1) {
-          const z = p0.z + t * dz;
-          if (z >= 0 && z <= height) {
-            hits.push({ t, z });
-          }
-        }
-      }
-      
-      return hits.length > 0 ? hits[0] : null;
+      return {
+        x: selectedUnit.x + inputs.unitOffsetX,
+        y: selectedUnit.y + inputs.unitOffsetY,
+        z: selectedUnit.height + inputs.unitHeight,
+        roofHeight: selectedUnit.height
+      };
     }
 
     function calculateReach(inputs, craneX, craneY) {
       const {
         pivotHeight, maxBoomLength, safetyMargin,
-        buildingX, buildingY, buildingLength, buildingWidth, roofHeight,
-        unitX, unitY, unitHeight,
         treeX, treeY, treeHeight, treeRadius, ignoreTree
       } = inputs;
       
-      const targetX = unitX;
-      const targetY = unitY;
-      const targetZ = roofHeight + unitHeight;
+      const acPos = getACPosition(inputs);
+      const unitBounds = getUnitBounds(inputs);
+      
+      const targetX = acPos.x;
+      const targetY = acPos.y;
+      const targetZ = acPos.z;
       
       const dx = targetX - craneX;
       const dy = targetY - craneY;
@@ -604,77 +742,79 @@
         return { reachable: false, reason: 'Crane too close to target' };
       }
       
-      const p0 = { x: craneX, y: craneY, z: pivotHeight };
-      const targetWithClearance = targetZ + safetyMargin;
+      const dirX = dx / horizDistance;
+      const dirY = dy / horizDistance;
       
-      let requiredTipHeight = targetWithClearance;
+      let requiredTipHeight = targetZ + safetyMargin;
       let limitingObstruction = 'target';
       const clearanceChecks = [];
       
-      const boxMin = { x: buildingX, y: buildingY, z: 0 };
-      const boxMax = { x: buildingX + buildingLength, y: buildingY + buildingWidth, z: roofHeight };
-      
-      const testTipHeight = requiredTipHeight;
-      const p1Test = { x: targetX, y: targetY, z: testTipHeight };
-      
-      const roofIntersect = lineIntersectsBox(p0, p1Test, boxMin, boxMax);
-      if (roofIntersect && roofIntersect.tMin < 0.99) {
-        const intersectX = p0.x + roofIntersect.tMin * (p1Test.x - p0.x);
-        const intersectY = p0.y + roofIntersect.tMin * (p1Test.y - p0.y);
+      for (const unit of unitBounds) {
+        const corners = [
+          { x: unit.x, y: unit.y },
+          { x: unit.x + unit.width, y: unit.y },
+          { x: unit.x + unit.width, y: unit.y + unit.depth },
+          { x: unit.x, y: unit.y + unit.depth }
+        ];
         
-        const edgeDist = Math.sqrt(
-          Math.pow(intersectX - craneX, 2) + 
-          Math.pow(intersectY - craneY, 2)
-        );
-        
-        const neededHeightAtEdge = roofHeight + safetyMargin;
-        const angleToEdge = Math.atan2(neededHeightAtEdge - pivotHeight, edgeDist);
-        const projectedTipHeight = pivotHeight + horizDistance * Math.tan(angleToEdge);
-        
-        if (projectedTipHeight > requiredTipHeight) {
-          requiredTipHeight = projectedTipHeight;
-          limitingObstruction = 'roof edge';
+        for (let i = 0; i < 4; i++) {
+          const p1 = corners[i];
+          const p2 = corners[(i + 1) % 4];
+          
+          const edgeDx = p2.x - p1.x;
+          const edgeDy = p2.y - p1.y;
+          
+          const denom = dirX * edgeDy - dirY * edgeDx;
+          if (Math.abs(denom) < 0.0001) continue;
+          
+          const t = ((p1.x - craneX) * edgeDy - (p1.y - craneY) * edgeDx) / denom;
+          const u = ((p1.x - craneX) * dirY - (p1.y - craneY) * dirX) / denom;
+          
+          if (t > 0.1 && t < horizDistance - 0.1 && u >= 0 && u <= 1) {
+            const neededHeight = unit.height + safetyMargin;
+            const angleToEdge = Math.atan2(neededHeight - pivotHeight, t);
+            const projectedTip = pivotHeight + horizDistance * Math.tan(angleToEdge);
+            
+            if (projectedTip > requiredTipHeight) {
+              requiredTipHeight = projectedTip;
+              limitingObstruction = `Unit ${unit.index + 1} roof (${unit.height}ft)`;
+              
+              clearanceChecks.push({
+                name: `Unit ${unit.index + 1}`,
+                required: neededHeight,
+                distance: t.toFixed(1),
+                height: unit.height
+              });
+            }
+          }
         }
-        
-        clearanceChecks.push({
-          name: 'Roof Edge',
-          required: neededHeightAtEdge,
-          distance: edgeDist.toFixed(1),
-          ok: true
-        });
       }
       
       if (!ignoreTree && treeHeight > 0) {
         const toTree = { x: treeX - craneX, y: treeY - craneY };
-        const toTarget = { x: targetX - craneX, y: targetY - craneY };
-        const toTargetLen = Math.sqrt(toTarget.x * toTarget.x + toTarget.y * toTarget.y);
+        const projLen = toTree.x * dirX + toTree.y * dirY;
         
-        if (toTargetLen > 0) {
-          const toTargetNorm = { x: toTarget.x / toTargetLen, y: toTarget.y / toTargetLen };
-          const projLen = toTree.x * toTargetNorm.x + toTree.y * toTargetNorm.y;
+        if (projLen > 0 && projLen < horizDistance) {
+          const perpX = toTree.x - projLen * dirX;
+          const perpY = toTree.y - projLen * dirY;
+          const perpDist = Math.sqrt(perpX * perpX + perpY * perpY);
           
-          if (projLen > 0 && projLen < toTargetLen) {
-            const perpX = toTree.x - projLen * toTargetNorm.x;
-            const perpY = toTree.y - projLen * toTargetNorm.y;
-            const perpDist = Math.sqrt(perpX * perpX + perpY * perpY);
+          if (perpDist < treeRadius + 3) {
+            const treeClearanceHeight = treeHeight + safetyMargin;
+            const angleToTree = Math.atan2(treeClearanceHeight - pivotHeight, projLen);
+            const projectedTip = pivotHeight + horizDistance * Math.tan(angleToTree);
             
-            if (perpDist < treeRadius + 2) {
-              const treeClearanceHeight = treeHeight + safetyMargin;
-              const angleToTree = Math.atan2(treeClearanceHeight - pivotHeight, projLen);
-              const projectedTipHeightTree = pivotHeight + horizDistance * Math.tan(angleToTree);
-              
-              if (projectedTipHeightTree > requiredTipHeight) {
-                requiredTipHeight = projectedTipHeightTree;
-                limitingObstruction = 'tree';
-              }
-              
-              clearanceChecks.push({
-                name: 'Tree',
-                required: treeClearanceHeight,
-                distance: projLen.toFixed(1),
-                ok: true
-              });
+            if (projectedTip > requiredTipHeight) {
+              requiredTipHeight = projectedTip;
+              limitingObstruction = 'tree';
             }
+            
+            clearanceChecks.push({
+              name: 'Tree',
+              required: treeClearanceHeight,
+              distance: projLen.toFixed(1),
+              height: treeHeight
+            });
           }
         }
       }
@@ -693,6 +833,8 @@
         boomAngleRad,
         horizDistance,
         tipHeight: requiredTipHeight,
+        targetZ,
+        acRoofHeight: acPos.roofHeight,
         limitingObstruction,
         clearanceChecks,
         reason: !isReachable ? 
@@ -701,28 +843,36 @@
     }
 
     function generateReachabilityMap(inputs) {
-      const {
-        buildingX, buildingY, buildingLength, buildingWidth,
-        unitX, unitY
-      } = inputs;
+      const unitBounds = getUnitBounds(inputs);
+      const acPos = getACPosition(inputs);
       
-      const gridSize = 5;
-      const margin = 80;
+      const gridSize = 8;
+      const margin = 60;
       
-      const minX = Math.min(buildingX, unitX) - margin;
-      const maxX = Math.max(buildingX + buildingLength, unitX) + margin;
-      const minY = Math.min(buildingY, unitY) - margin;
-      const maxY = Math.max(buildingY + buildingWidth, unitY) + margin;
+      let minX = inputs.buildingX - margin;
+      let maxX = inputs.buildingX;
+      let minY = inputs.buildingY - margin;
+      let maxY = inputs.buildingY + inputs.buildingDepth + margin;
+      
+      for (const unit of unitBounds) {
+        maxX = Math.max(maxX, unit.x + unit.width);
+      }
+      maxX += margin;
       
       const points = [];
       const colors = [];
       
       for (let x = minX; x <= maxX; x += gridSize) {
         for (let y = minY; y <= maxY; y += gridSize) {
-          if (x >= buildingX && x <= buildingX + buildingLength &&
-              y >= buildingY && y <= buildingY + buildingWidth) {
-            continue;
+          let insideBuilding = false;
+          for (const unit of unitBounds) {
+            if (x >= unit.x && x <= unit.x + unit.width &&
+                y >= unit.y && y <= unit.y + unit.depth) {
+              insideBuilding = true;
+              break;
+            }
           }
+          if (insideBuilding) continue;
           
           const result = calculateReach(inputs, x, y);
           
@@ -730,10 +880,10 @@
           
           if (result.reachable) {
             const ratio = result.boomLength / inputs.maxBoomLength;
-            const g = 0.8 - ratio * 0.4;
-            colors.push(0.2, g, 0.3, 0.6);
+            const g = 0.85 - ratio * 0.5;
+            colors.push(0.2, g, 0.3, 0.5);
           } else {
-            colors.push(0.4, 0.15, 0.15, 0.3);
+            colors.push(0.35, 0.12, 0.12, 0.25);
           }
         }
       }
@@ -752,15 +902,15 @@
       const height = Math.max(450, container.clientHeight - 60);
       
       camera = new THREE.PerspectiveCamera(50, width / height, 1, 2000);
-      camera.position.set(-150, 120, 150);
-      camera.lookAt(60, 0, 40);
+      camera.position.set(-80, 120, 100);
+      camera.lookAt(100, 0, 40);
       
       renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
       renderer.setSize(width, height);
       renderer.setPixelRatio(window.devicePixelRatio);
       
       controls = new THREE.OrbitControls(camera, renderer.domElement);
-      controls.target.set(60, 0, 40);
+      controls.target.set(120, 0, 40);
       controls.enableDamping = true;
       controls.dampingFactor = 0.1;
       controls.maxPolarAngle = Math.PI / 2 - 0.05;
@@ -772,10 +922,24 @@
       dirLight.position.set(100, 200, 100);
       scene.add(dirLight);
       
-      const gridHelper = new THREE.GridHelper(400, 40, 0x444444, 0x333333);
+      const gridHelper = new THREE.GridHelper(500, 50, 0x444444, 0x333333);
       scene.add(gridHelper);
       
-      const planeGeo = new THREE.PlaneGeometry(400, 400);
+      // Compass indicator - West marker
+      const westMarkerGeo = new THREE.ConeGeometry(4, 12, 8);
+      const westMarkerMat = new THREE.MeshLambertMaterial({ color: 0xf97316 });
+      const westMarker = new THREE.Mesh(westMarkerGeo, westMarkerMat);
+      westMarker.position.set(-25, 6, 40);
+      westMarker.rotation.z = Math.PI / 2;
+      scene.add(westMarker);
+      
+      // West label pole
+      const westPoleGeo = new THREE.CylinderGeometry(0.5, 0.5, 20, 8);
+      const westPole = new THREE.Mesh(westPoleGeo, westMarkerMat);
+      westPole.position.set(-25, 10, 40);
+      scene.add(westPole);
+      
+      const planeGeo = new THREE.PlaneGeometry(500, 500);
       const planeMat = new THREE.MeshBasicMaterial({ visible: false });
       groundPlane = new THREE.Mesh(planeGeo, planeMat);
       groundPlane.rotation.x = -Math.PI / 2;
@@ -858,36 +1022,41 @@
       
       const {
         craneX, craneY, pivotHeight,
-        buildingX, buildingY, buildingLength, buildingWidth, roofHeight,
-        unitX, unitY, unitHeight,
         treeX, treeY, treeHeight, treeRadius, ignoreTree
       } = inputs;
       
-      const buildingGeo = new THREE.BoxGeometry(buildingLength, roofHeight, buildingWidth);
-      const buildingMat = new THREE.MeshLambertMaterial({ 
-        color: 0x22c55e, 
-        transparent: true, 
-        opacity: 0.7 
-      });
-      const building = new THREE.Mesh(buildingGeo, buildingMat);
-      building.position.set(
-        buildingX + buildingLength / 2,
-        roofHeight / 2,
-        buildingY + buildingWidth / 2
-      );
-      scene.add(building);
+      const unitBounds = getUnitBounds(inputs);
+      const acPos = getACPosition(inputs);
       
-      const edgesGeo = new THREE.EdgesGeometry(buildingGeo);
-      const edgesMat = new THREE.LineBasicMaterial({ color: 0x16a34a });
-      const edges = new THREE.LineSegments(edgesGeo, edgesMat);
-      edges.position.copy(building.position);
-      scene.add(edges);
+      for (const unit of unitBounds) {
+        const color = unit.stories === 2 ? 0x16a34a : 0x22c55e;
+        const geo = new THREE.BoxGeometry(unit.width, unit.height, unit.depth);
+        const mat = new THREE.MeshLambertMaterial({ 
+          color: color, 
+          transparent: true, 
+          opacity: 0.75 
+        });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(
+          unit.x + unit.width / 2,
+          unit.height / 2,
+          unit.y + unit.depth / 2
+        );
+        scene.add(mesh);
+        
+        const edgesGeo = new THREE.EdgesGeometry(geo);
+        const edgeColor = unit.index === inputs.selectedUnitIndex ? 0xf97316 : 0x15803d;
+        const edgesMat = new THREE.LineBasicMaterial({ color: edgeColor });
+        const edges = new THREE.LineSegments(edgesGeo, edgesMat);
+        edges.position.copy(mesh.position);
+        scene.add(edges);
+      }
       
-      const unitGeo = new THREE.BoxGeometry(6, unitHeight, 4);
+      const unitGeo = new THREE.BoxGeometry(5, inputs.unitHeight, 4);
       const unitMat = new THREE.MeshLambertMaterial({ color: 0xf97316 });
-      const unit = new THREE.Mesh(unitGeo, unitMat);
-      unit.position.set(unitX, roofHeight + unitHeight / 2, unitY);
-      scene.add(unit);
+      const unitMesh = new THREE.Mesh(unitGeo, unitMat);
+      unitMesh.position.set(acPos.x, acPos.roofHeight + inputs.unitHeight / 2, acPos.y);
+      scene.add(unitMesh);
       
       if (!ignoreTree && treeHeight > 0) {
         const trunkGeo = new THREE.CylinderGeometry(1, 1.5, treeHeight * 0.7, 8);
@@ -922,7 +1091,7 @@
       if (result && result.boomLength > 0) {
         const boomPoints = [
           new THREE.Vector3(craneX, pivotHeight, craneY),
-          new THREE.Vector3(unitX, result.tipHeight, unitY)
+          new THREE.Vector3(acPos.x, result.tipHeight, acPos.y)
         ];
         const boomGeo = new THREE.BufferGeometry().setFromPoints(boomPoints);
         const boomMat = new THREE.LineBasicMaterial({ 
@@ -933,8 +1102,8 @@
         scene.add(boomLine);
         
         const loadLinePoints = [
-          new THREE.Vector3(unitX, result.tipHeight, unitY),
-          new THREE.Vector3(unitX, roofHeight + unitHeight, unitY)
+          new THREE.Vector3(acPos.x, result.tipHeight, acPos.y),
+          new THREE.Vector3(acPos.x, acPos.z, acPos.y)
         ];
         const loadLineGeo = new THREE.BufferGeometry().setFromPoints(loadLinePoints);
         const loadLineMat = new THREE.LineBasicMaterial({ color: 0xfbbf24 });
@@ -982,17 +1151,18 @@
       
       const {
         craneX, craneY, pivotHeight, safetyMargin,
-        buildingX, buildingY, buildingLength, buildingWidth, roofHeight,
-        unitX, unitY, unitHeight,
         treeX, treeY, treeHeight, ignoreTree
       } = inputs;
+      
+      const acPos = getACPosition(inputs);
+      const unitBounds = getUnitBounds(inputs);
       
       const padding = { left: 50, right: 20, top: 20, bottom: 35 };
       const drawWidth = displayWidth - padding.left - padding.right;
       const drawHeight = displayHeight - padding.top - padding.bottom;
       
       const maxDist = result.horizDistance + 20;
-      const maxHeight = Math.max(result.tipHeight, treeHeight, roofHeight + unitHeight) + 10;
+      const maxHeight = Math.max(result.tipHeight + 5, treeHeight + 5, inputs.twoStoryHeight + 10);
       
       const scaleX = drawWidth / maxDist;
       const scaleY = drawHeight / maxHeight;
@@ -1003,6 +1173,12 @@
       
       function toX(d) { return baseX + d * scale; }
       function toY(h) { return baseY - h * scale; }
+      
+      const dx = acPos.x - craneX;
+      const dy = acPos.y - craneY;
+      const totalDist = Math.sqrt(dx * dx + dy * dy);
+      const dirX = dx / totalDist;
+      const dirY = dy / totalDist;
       
       ctx.strokeStyle = '#444';
       ctx.fillStyle = '#666';
@@ -1018,7 +1194,7 @@
       }
       
       ctx.textAlign = 'right';
-      for (let h = 0; h <= maxHeight; h += 20) {
+      for (let h = 0; h <= maxHeight; h += 10) {
         ctx.beginPath();
         ctx.moveTo(baseX - 4, toY(h));
         ctx.lineTo(baseX, toY(h));
@@ -1032,41 +1208,35 @@
       ctx.lineTo(toX(maxDist), baseY);
       ctx.stroke();
       
-      const dx = unitX - craneX;
-      const dy = unitY - craneY;
-      const totalDist = Math.sqrt(dx * dx + dy * dy);
-      const dirX = dx / totalDist;
-      const dirY = dy / totalDist;
-      
-      const bldgCorners = [
-        { x: buildingX, y: buildingY },
-        { x: buildingX + buildingLength, y: buildingY },
-        { x: buildingX + buildingLength, y: buildingY + buildingWidth },
-        { x: buildingX, y: buildingY + buildingWidth }
-      ];
-      
-      let minBldgDist = Infinity, maxBldgDist = 0;
-      for (const corner of bldgCorners) {
-        const toCorner = { x: corner.x - craneX, y: corner.y - craneY };
-        const proj = toCorner.x * dirX + toCorner.y * dirY;
-        if (proj > 0) {
-          minBldgDist = Math.min(minBldgDist, proj);
-          maxBldgDist = Math.max(maxBldgDist, proj);
+      for (const unit of unitBounds) {
+        const corners = [
+          { x: unit.x, y: unit.y },
+          { x: unit.x + unit.width, y: unit.y },
+          { x: unit.x + unit.width, y: unit.y + unit.depth },
+          { x: unit.x, y: unit.y + unit.depth }
+        ];
+        
+        let minDist = Infinity, maxDistUnit = 0;
+        for (const corner of corners) {
+          const toCorner = { x: corner.x - craneX, y: corner.y - craneY };
+          const proj = toCorner.x * dirX + toCorner.y * dirY;
+          if (proj > 0) {
+            minDist = Math.min(minDist, proj);
+            maxDistUnit = Math.max(maxDistUnit, proj);
+          }
+        }
+        
+        if (minDist < totalDist && maxDistUnit > 0 && minDist < Infinity) {
+          const color = unit.stories === 2 ? 'rgba(22, 163, 74, 0.6)' : 'rgba(34, 197, 94, 0.6)';
+          ctx.fillStyle = color;
+          ctx.fillRect(toX(Math.max(0, minDist)), toY(unit.height), 
+                       (Math.min(maxDistUnit, totalDist) - Math.max(0, minDist)) * scale, 
+                       unit.height * scale);
         }
       }
       
-      if (minBldgDist < totalDist && maxBldgDist > 0) {
-        ctx.fillStyle = 'rgba(34, 197, 94, 0.6)';
-        ctx.fillRect(toX(minBldgDist), toY(roofHeight), 
-                     (maxBldgDist - minBldgDist) * scale, roofHeight * scale);
-        ctx.strokeStyle = '#22c55e';
-        ctx.strokeRect(toX(minBldgDist), toY(roofHeight), 
-                       (maxBldgDist - minBldgDist) * scale, roofHeight * scale);
-      }
-      
       ctx.fillStyle = '#f97316';
-      const unitDist = totalDist;
-      ctx.fillRect(toX(unitDist) - 4, toY(roofHeight + unitHeight), 8, unitHeight * scale);
+      ctx.fillRect(toX(totalDist) - 4, toY(acPos.z), 8, inputs.unitHeight * scale);
       
       if (!ignoreTree && treeHeight > 0) {
         const toTree = { x: treeX - craneX, y: treeY - craneY };
@@ -1082,7 +1252,7 @@
           
           ctx.fillStyle = '#228b22';
           ctx.beginPath();
-          ctx.arc(toX(treeDist), toY(treeHeight), 6, 0, Math.PI * 2);
+          ctx.arc(toX(treeDist), toY(treeHeight), 5, 0, Math.PI * 2);
           ctx.fill();
           ctx.lineWidth = 1;
         }
@@ -1090,7 +1260,7 @@
       
       ctx.fillStyle = '#4a9eff';
       ctx.beginPath();
-      ctx.arc(toX(0), toY(pivotHeight), 5, 0, Math.PI * 2);
+      ctx.arc(toX(0), toY(pivotHeight), 4, 0, Math.PI * 2);
       ctx.fill();
       
       ctx.strokeStyle = result.reachable ? '#60a5fa' : '#ff6b6b';
@@ -1103,7 +1273,7 @@
       ctx.strokeStyle = '#fbbf24';
       ctx.beginPath();
       ctx.moveTo(toX(totalDist), toY(result.tipHeight));
-      ctx.lineTo(toX(totalDist), toY(roofHeight + unitHeight));
+      ctx.lineTo(toX(totalDist), toY(acPos.z));
       ctx.stroke();
       ctx.lineWidth = 1;
       
@@ -1115,19 +1285,7 @@
     }
 
     function update() {
-      const validation = getInputs();
-      
-      if (!validation.valid) {
-        document.getElementById('boom-length-value').textContent = '—';
-        document.getElementById('boom-angle-value').textContent = '—';
-        document.getElementById('horiz-distance-value').textContent = '—';
-        document.getElementById('reachable-value').textContent = '—';
-        document.getElementById('reachable-item').className = 'result-item';
-        document.getElementById('clearance-detail').innerHTML = '';
-        return;
-      }
-      
-      const inputs = validation.inputs;
+      const inputs = getInputs();
       const result = calculateReach(inputs, inputs.craneX, inputs.craneY);
       
       document.getElementById('boom-length-value').textContent = 
@@ -1147,9 +1305,9 @@
         detailHtml += `<br><span class="fail">${result.reason}</span>`;
       }
       if (result.clearanceChecks && result.clearanceChecks.length > 0) {
-        detailHtml += '<br><strong>Clearances:</strong>';
+        detailHtml += '<br><strong>Clearances checked:</strong>';
         for (const check of result.clearanceChecks) {
-          detailHtml += `<br>• ${check.name}: ${check.required.toFixed(0)} ft at ${check.distance} ft`;
+          detailHtml += `<br>• ${check.name}: ${check.height}ft + ${inputs.safetyMargin}ft margin at ${check.distance}ft`;
         }
       }
       document.getElementById('clearance-detail').innerHTML = detailHtml;
@@ -1163,6 +1321,8 @@
       if (el) el.addEventListener('input', update);
     });
 
+    initUnits();
+    renderUnitsGrid();
     init3D();
     update();
   </script>
