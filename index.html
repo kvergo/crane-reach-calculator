@@ -2,187 +2,1169 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Crane Reach Calculator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    
     body {
-      font-family: Arial, sans-serif;
-      max-width: 900px;
-      margin: auto;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+      margin: 0;
+      padding: 16px;
       background-color: #1e1e1e;
       color: #f0f0f0;
+      line-height: 1.5;
     }
-    label {
-      display: block;
-      margin: 10px 0 5px;
+    
+    h1 {
+      font-size: 1.8rem;
+      margin: 0 0 16px 0;
+      text-align: center;
     }
-    input[type="number"], input[type="checkbox"] {
+    
+    .main-layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 16px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+    
+    .controls-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: calc(100vh - 100px);
+      overflow-y: auto;
+    }
+    
+    .view-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .input-section {
+      background: #2a2a2a;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    
+    .input-section h2 {
+      font-size: 0.85rem;
+      margin: 0 0 10px 0;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .input-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    
+    .input-group.single {
+      grid-template-columns: 1fr;
+    }
+    
+    .input-wrapper {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .input-wrapper label {
+      font-size: 0.75rem;
+      margin-bottom: 2px;
+      color: #bbb;
+    }
+    
+    .input-wrapper input[type="number"] {
       background-color: #333;
       color: #fff;
-      border: 1px solid #666;
-      padding: 5px;
+      border: 1px solid #555;
+      padding: 6px 8px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      width: 100%;
+    }
+    
+    .input-wrapper input[type="number"]:focus {
+      outline: none;
+      border-color: #4a9eff;
+    }
+    
+    .input-wrapper input[type="number"].error {
+      border-color: #ff6b6b;
+      background-color: #3a2525;
+    }
+    
+    .input-wrapper .error-message {
+      color: #ff6b6b;
+      font-size: 0.7rem;
+      margin-top: 2px;
+      min-height: 1em;
+    }
+    
+    .checkbox-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 0;
+    }
+    
+    .checkbox-wrapper input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: #4a9eff;
+      cursor: pointer;
+    }
+    
+    .checkbox-wrapper label {
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    
+    .results-section {
+      background: #2a2a2a;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    
+    .result-item {
+      text-align: center;
+      padding: 8px;
+      background: #333;
+      border-radius: 6px;
+    }
+    
+    .result-item .value {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #4a9eff;
+    }
+    
+    .result-item .label {
+      font-size: 0.7rem;
+      color: #888;
+      text-transform: uppercase;
+    }
+    
+    .result-item.reachable .value {
+      color: #4ade80;
+    }
+    
+    .result-item.not-reachable .value {
+      color: #ff6b6b;
+    }
+    
+    .result-item.full-width {
+      grid-column: 1 / -1;
+    }
+    
+    .view-3d-container {
+      background: #2a2a2a;
+      border-radius: 8px;
+      padding: 12px;
+      flex: 1;
+      min-height: 500px;
+    }
+    
+    .view-3d-container h3 {
+      margin: 0 0 8px 0;
+      font-size: 0.9rem;
+      color: #aaa;
+    }
+    
+    #canvas-3d {
+      width: 100%;
+      height: 100%;
+      min-height: 450px;
+      border-radius: 4px;
+      cursor: grab;
+    }
+    
+    #canvas-3d:active {
+      cursor: grabbing;
+    }
+    
+    .view-2d-container {
+      background: #2a2a2a;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    
+    .view-2d-container h3 {
+      margin: 0 0 8px 0;
+      font-size: 0.9rem;
+      color: #aaa;
+    }
+    
+    #canvas-2d {
+      width: 100%;
+      height: 200px;
+      background: #1a1a1a;
       border-radius: 4px;
     }
-    canvas {
-      border: 1px solid #ccc;
-      margin-top: 20px;
-      background-color: #2a2a2a;
-    }
-    .input-group {
+    
+    .legend {
       display: flex;
-      gap: 10px;
       flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #444;
     }
-    .input-group label {
-      flex: 1 0 200px;
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.75rem;
+      color: #aaa;
     }
+    
+    .legend-color {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+    }
+    
+    .legend-color.building { background: #22c55e; }
+    .legend-color.ac-unit { background: #f97316; }
+    .legend-color.tree { background: #8b4513; }
+    .legend-color.crane { background: #4a9eff; }
+    .legend-color.boom { background: #60a5fa; }
+    .legend-color.reachable { background: rgba(74, 222, 128, 0.5); }
+    .legend-color.unreachable { background: rgba(255, 107, 107, 0.3); }
+    
+    .instructions {
+      font-size: 0.75rem;
+      color: #888;
+      margin-top: 8px;
+      padding: 8px;
+      background: #333;
+      border-radius: 4px;
+    }
+    
+    .clearance-detail {
+      font-size: 0.75rem;
+      color: #aaa;
+      margin-top: 8px;
+      padding: 8px;
+      background: #333;
+      border-radius: 4px;
+    }
+    
+    .clearance-detail .ok { color: #4ade80; }
+    .clearance-detail .fail { color: #ff6b6b; }
   </style>
 </head>
 <body>
   <h1>Crane Reach Calculator</h1>
+  
+  <div class="main-layout">
+    <div class="controls-panel">
+      <div class="input-section">
+        <h2>Crane Position &amp; Setup</h2>
+        <div class="input-group">
+          <div class="input-wrapper">
+            <label for="craneX">Crane X (ft)</label>
+            <input type="number" id="craneX" value="-20" step="1">
+            <div class="error-message" id="craneX-error"></div>
+          </div>
+          <div class="input-wrapper">
+            <label for="craneY">Crane Y (ft)</label>
+            <input type="number" id="craneY" value="50" step="1">
+            <div class="error-message" id="craneY-error"></div>
+          </div>
+          <div class="input-wrapper">
+            <label for="pivotHeight">Pivot Height (ft)</label>
+            <input type="number" id="pivotHeight" value="8" step="0.5">
+            <div class="error-message" id="pivotHeight-error"></div>
+          </div>
+          <div class="input-wrapper">
+            <label for="maxBoomLength">Max Boom (ft)</label>
+            <input type="number" id="maxBoomLength" value="250" step="1">
+            <div class="error-message" id="maxBoomLength-error"></div>
+          </div>
+        </div>
+        <div class="input-group single">
+          <div class="input-wrapper">
+            <label for="safetyMargin">Safety Clearance (ft)</label>
+            <input type="number" id="safetyMargin" value="5" step="0.5">
+            <div class="error-message" id="safetyMargin-error"></div>
+          </div>
+        </div>
+        <div class="instructions">
+          Drag the blue crane marker on the ground plane to reposition, or enter coordinates above.
+        </div>
+      </div>
 
-  <div class="input-group">
-    <label>Distance to Roof (ft): <input type="number" id="distanceToRoof" value="150"></label>
-    <label>Roof Height (ft): <input type="number" id="roofHeight" value="25"></label>
-    <label>Tree Height (ft): <input type="number" id="treeHeight" value="41"></label>
-    <label>Tree Distance from Crane (ft): <input type="number" id="treeDistance" value="48"></label>
-    <label>Building Distance from Crane (ft): <input type="number" id="buildingDistance" value="58"></label>
-    <label>Max Boom Length (ft): <input type="number" id="maxBoomLength" value="250"></label>
-    <label><input type="checkbox" id="ignoreTree"> Ignore Tree Obstruction</label>
+      <div class="input-section">
+        <h2>Building</h2>
+        <div class="input-group">
+          <div class="input-wrapper">
+            <label for="buildingX">Position X (ft)</label>
+            <input type="number" id="buildingX" value="0" step="1">
+            <div class="error-message" id="buildingX-error"></div>
+          </div>
+          <div class="input-wrapper">
+            <label for="buildingY">Position Y (ft)</label>
+            <input type="number" id="buildingY" value="0" step="1">
+            <div class="error-message" id="buildingY-error"></div>
+          </div>
+          <div class="input-wrapper">
+            <label for="buildingLength">Length/X (ft)</label>
+            <input type="number" id="buildingLength" value="120" step="1">
+            <div class="error-message" id="buildingLength-error"></div>
+          </div>
+          <div class="input-wrapper">
+            <label for="buildingWidth">Width/Y (ft)</label>
+            <input type="number" id="buildingWidth" value="80" step="1">
+            <div class="error-message" id="buildingWidth-error"></div>
+          </div>
+          <div class="input-wrapper">
+            <label for="roofHeight">Roof Height (ft)</label>
+            <input type="number" id="roofHeight" value="25" step="1">
+            <div class="error-message" id="roofHeight-error"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-section">
+        <h2>AC Unit (Lift Target)</h2>
+        <div class="input-group">
+          <div class="input-wrapper">
+            <label for="unitX">Position X (ft)</label>
+            <input type="number" id="unitX" value="60" step="1">
+            <div class="error-message" id="unitX-error"></div>
+          </div>
+          <div class="input-wrapper">
+            <label for="unitY">Position Y (ft)</label>
+            <input type="number" id="unitY" value="40" step="1">
+            <div class="error-message" id="unitY-error"></div>
+          </div>
+          <div class="input-wrapper">
+            <label for="unitHeight">Height (ft)</label>
+            <input type="number" id="unitHeight" value="3" step="0.5">
+            <div class="error-message" id="unitHeight-error"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-section">
+        <h2>Tree Obstruction</h2>
+        <div class="input-group">
+          <div class="input-wrapper">
+            <label for="treeX">Position X (ft)</label>
+            <input type="number" id="treeX" value="-10" step="1">
+            <div class="error-message" id="treeX-error"></div>
+          </div>
+          <div class="input-wrapper">
+            <label for="treeY">Position Y (ft)</label>
+            <input type="number" id="treeY" value="30" step="1">
+            <div class="error-message" id="treeY-error"></div>
+          </div>
+          <div class="input-wrapper">
+            <label for="treeHeight">Height (ft)</label>
+            <input type="number" id="treeHeight" value="41" step="1">
+            <div class="error-message" id="treeHeight-error"></div>
+          </div>
+          <div class="input-wrapper">
+            <label for="treeRadius">Canopy Radius (ft)</label>
+            <input type="number" id="treeRadius" value="8" step="1">
+            <div class="error-message" id="treeRadius-error"></div>
+          </div>
+        </div>
+        <div class="checkbox-wrapper">
+          <input type="checkbox" id="ignoreTree">
+          <label for="ignoreTree">Ignore Tree</label>
+        </div>
+      </div>
+
+      <div class="results-section">
+        <h2>Results</h2>
+        <div class="results-grid">
+          <div class="result-item">
+            <div class="value" id="boom-length-value">—</div>
+            <div class="label">Boom Length (ft)</div>
+          </div>
+          <div class="result-item">
+            <div class="value" id="boom-angle-value">—</div>
+            <div class="label">Boom Angle</div>
+          </div>
+          <div class="result-item">
+            <div class="value" id="horiz-distance-value">—</div>
+            <div class="label">Horiz. Distance (ft)</div>
+          </div>
+          <div class="result-item" id="reachable-item">
+            <div class="value" id="reachable-value">—</div>
+            <div class="label">Reachable?</div>
+          </div>
+        </div>
+        <div class="clearance-detail" id="clearance-detail"></div>
+      </div>
+    </div>
+
+    <div class="view-panel">
+      <div class="view-3d-container">
+        <h3>3D Site View (drag to orbit, scroll to zoom, drag crane to reposition)</h3>
+        <canvas id="canvas-3d"></canvas>
+        <div class="legend">
+          <div class="legend-item"><span class="legend-color building"></span> Building</div>
+          <div class="legend-item"><span class="legend-color ac-unit"></span> AC Unit</div>
+          <div class="legend-item"><span class="legend-color tree"></span> Tree</div>
+          <div class="legend-item"><span class="legend-color crane"></span> Crane</div>
+          <div class="legend-item"><span class="legend-color boom"></span> Boom</div>
+          <div class="legend-item"><span class="legend-color reachable"></span> Reachable Zone</div>
+          <div class="legend-item"><span class="legend-color unreachable"></span> Unreachable</div>
+        </div>
+      </div>
+      
+      <div class="view-2d-container">
+        <h3>2D Side View (along boom path)</h3>
+        <canvas id="canvas-2d"></canvas>
+      </div>
+    </div>
   </div>
 
-  <p id="results"></p>
-
-  <canvas id="diagram" width="1600" height="800"></canvas>
-
   <script>
-    const canvas = document.getElementById('diagram');
-    const ctx = canvas.getContext('2d');
-
-    const inputs = [
-      'distanceToRoof', 'roofHeight', 'treeHeight', 'treeDistance', 'buildingDistance', 'maxBoomLength', 'ignoreTree'
+    let scene, camera, renderer, controls;
+    let craneMesh, boomLine, groundPlane, reachabilityMesh;
+    let isDraggingCrane = false;
+    let raycaster, mouse;
+    
+    const inputIds = [
+      'craneX', 'craneY', 'pivotHeight', 'maxBoomLength', 'safetyMargin',
+      'buildingX', 'buildingY', 'buildingLength', 'buildingWidth', 'roofHeight',
+      'unitX', 'unitY', 'unitHeight',
+      'treeX', 'treeY', 'treeHeight', 'treeRadius', 'ignoreTree'
     ];
 
-    inputs.forEach(id => {
-      document.getElementById(id).addEventListener('input', draw);
-    });
+    const validationRules = {
+      craneX: { required: true, label: 'Crane X' },
+      craneY: { required: true, label: 'Crane Y' },
+      pivotHeight: { min: 0, required: true, label: 'Pivot height' },
+      maxBoomLength: { min: 1, required: true, label: 'Max boom' },
+      safetyMargin: { min: 0, required: true, label: 'Safety margin' },
+      buildingX: { required: true, label: 'Building X' },
+      buildingY: { required: true, label: 'Building Y' },
+      buildingLength: { min: 1, required: true, label: 'Building length' },
+      buildingWidth: { min: 1, required: true, label: 'Building width' },
+      roofHeight: { min: 0, required: true, label: 'Roof height' },
+      unitX: { required: true, label: 'Unit X' },
+      unitY: { required: true, label: 'Unit Y' },
+      unitHeight: { min: 0, required: true, label: 'Unit height' },
+      treeX: { required: true, label: 'Tree X' },
+      treeY: { required: true, label: 'Tree Y' },
+      treeHeight: { min: 0, required: true, label: 'Tree height' },
+      treeRadius: { min: 0, required: true, label: 'Tree radius' }
+    };
 
-    function draw() {
-      const distanceToRoof = parseFloat(document.getElementById('distanceToRoof').value);
-      const roofHeight = parseFloat(document.getElementById('roofHeight').value);
-      const treeHeight = parseFloat(document.getElementById('treeHeight').value);
-      const treeDistance = parseFloat(document.getElementById('treeDistance').value);
-      const buildingDistance = parseFloat(document.getElementById('buildingDistance').value);
-      const maxBoomLength = parseFloat(document.getElementById('maxBoomLength').value);
+    function validateInput(id, value) {
+      const rules = validationRules[id];
+      if (!rules) return { valid: true, value };
 
-      let clearanceHeight = 0;
-      let clearanceDistance = 0;
-
-      if (!document.getElementById('ignoreTree').checked) {
-        const treeSlope = treeHeight / treeDistance;
-        const buildingSlope = roofHeight / buildingDistance;
-
-        if (treeSlope > buildingSlope) {
-          clearanceHeight = treeHeight;
-          clearanceDistance = treeDistance;
-        } else {
-          clearanceHeight = roofHeight;
-          clearanceDistance = buildingDistance;
+      const errorEl = document.getElementById(`${id}-error`);
+      const inputEl = document.getElementById(id);
+      
+      if (value === '' || value === null || value === undefined) {
+        if (rules.required) {
+          if (errorEl) errorEl.textContent = 'Required';
+          if (inputEl) inputEl.classList.add('error');
+          return { valid: false };
         }
-      } else {
-        clearanceHeight = roofHeight;
-        clearanceDistance = buildingDistance;
       }
 
-      const boomAngleRad = Math.atan(clearanceHeight / clearanceDistance);
-      const boomAngleDeg = boomAngleRad * 180 / Math.PI;
-      const boomLength = distanceToRoof / Math.cos(boomAngleRad);
-
-      const isReachable = boomLength <= maxBoomLength;
-
-      document.getElementById('results').innerHTML =
-        `Calculated Boom Length: ${boomLength.toFixed(1)} ft<br>` +
-        `At Boom Angle: ${boomAngleDeg.toFixed(1)}°<br>` +
-        `Reachable with Max Boom: <span style="color:${isReachable ? 'limegreen' : 'red'}; font-weight:bold;">${isReachable ? "YES" : "NO"}</span>`;
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const scale = 4;
-      const baseX = 50;
-      const baseY = canvas.height - 50;
-
-      ctx.strokeStyle = '#444';
-      ctx.fillStyle = '#888';
-      ctx.font = '12px Arial';
-      for (let i = 0; i <= (canvas.width - baseX) / scale; i += 10) {
-        const x = baseX + i * scale;
-        ctx.beginPath();
-        ctx.moveTo(x, baseY);
-        ctx.lineTo(x, baseY + 5);
-        ctx.stroke();
-        ctx.fillText(i.toString(), x - 5, baseY + 18);
+      const num = parseFloat(value);
+      
+      if (isNaN(num)) {
+        if (errorEl) errorEl.textContent = 'Invalid';
+        if (inputEl) inputEl.classList.add('error');
+        return { valid: false };
       }
 
-      ctx.strokeStyle = '#fff';
-      ctx.beginPath();
-      ctx.moveTo(baseX, baseY);
-      ctx.lineTo(canvas.width - 50, baseY);
-      ctx.stroke();
+      if (rules.min !== undefined && num < rules.min) {
+        if (errorEl) errorEl.textContent = `Min: ${rules.min}`;
+        if (inputEl) inputEl.classList.add('error');
+        return { valid: false };
+      }
 
-      const treeX = baseX + treeDistance * scale;
-      const treeTopY = baseY - treeHeight * scale;
-      ctx.strokeStyle = 'brown';
-      ctx.beginPath();
-      ctx.moveTo(treeX, baseY);
-      ctx.lineTo(treeX, treeTopY);
-      ctx.stroke();
-      ctx.fillStyle = 'darkgreen';
-      ctx.beginPath();
-      ctx.arc(treeX, treeTopY, 10, 0, Math.PI * 2);
-      ctx.fill();
-
-      const buildingStartX = baseX + buildingDistance * scale;
-      const buildingEndX = baseX + (buildingDistance + 242) * scale;
-      const buildingTopY = baseY - roofHeight * scale;
-      ctx.fillStyle = 'green';
-      ctx.fillRect(buildingStartX, buildingTopY, buildingEndX - buildingStartX, roofHeight * scale);
-
-      const boomX = baseX + Math.cos(boomAngleRad) * boomLength * scale;
-      const boomY = baseY - Math.sin(boomAngleRad) * boomLength * scale;
-
-      ctx.strokeStyle = 'blue';
-      ctx.beginPath();
-      ctx.moveTo(baseX, baseY);
-      ctx.lineTo(boomX, boomY);
-      ctx.stroke();
-
-      ctx.strokeStyle = 'yellow';
-      ctx.beginPath();
-      ctx.moveTo(boomX, boomY);
-      ctx.lineTo(boomX, baseY - roofHeight * scale);
-      ctx.stroke();
-
-      ctx.strokeStyle = 'gray';
-      ctx.beginPath();
-      ctx.moveTo(baseX, baseY);
-      ctx.lineTo(boomX, baseY);
-      ctx.stroke();
-
-      ctx.strokeStyle = 'green';
-      ctx.beginPath();
-      ctx.moveTo(boomX - 10, boomY);
-      ctx.lineTo(boomX + 10, boomY);
-      ctx.stroke();
-
-      const arcRadius = 40;
-      ctx.beginPath();
-      ctx.strokeStyle = '#f0f0f0';
-      ctx.arc(baseX, baseY, arcRadius, -boomAngleRad, 0, false);
-      ctx.stroke();
-      ctx.fillStyle = '#f0f0f0';
-      ctx.font = "14px Arial";
-      ctx.fillText(`${boomAngleDeg.toFixed(1)}°`, baseX + 10, baseY - 10);
+      if (errorEl) errorEl.textContent = '';
+      if (inputEl) inputEl.classList.remove('error');
+      return { valid: true, value: num };
     }
 
-    draw();
+    function getInputs() {
+      const inputs = {};
+      let allValid = true;
+
+      for (const id of inputIds) {
+        if (id === 'ignoreTree') {
+          inputs[id] = document.getElementById(id).checked;
+          continue;
+        }
+        
+        const rawValue = document.getElementById(id).value;
+        const result = validateInput(id, rawValue);
+        
+        if (!result.valid) {
+          allValid = false;
+        } else {
+          inputs[id] = result.value;
+        }
+      }
+
+      return { valid: allValid, inputs };
+    }
+
+    function lineIntersectsBox(p0, p1, boxMin, boxMax) {
+      let tMin = 0, tMax = 1;
+      const dir = { x: p1.x - p0.x, y: p1.y - p0.y, z: p1.z - p0.z };
+      
+      for (const axis of ['x', 'y', 'z']) {
+        if (Math.abs(dir[axis]) < 1e-10) {
+          if (p0[axis] < boxMin[axis] || p0[axis] > boxMax[axis]) return null;
+        } else {
+          const t1 = (boxMin[axis] - p0[axis]) / dir[axis];
+          const t2 = (boxMax[axis] - p0[axis]) / dir[axis];
+          const tNear = Math.min(t1, t2);
+          const tFar = Math.max(t1, t2);
+          tMin = Math.max(tMin, tNear);
+          tMax = Math.min(tMax, tFar);
+          if (tMin > tMax) return null;
+        }
+      }
+      
+      return { tMin, tMax };
+    }
+
+    function lineIntersectsCylinder(p0, p1, cx, cy, radius, height) {
+      const dx = p1.x - p0.x;
+      const dy = p1.y - p0.y;
+      const dz = p1.z - p0.z;
+      
+      const fx = p0.x - cx;
+      const fy = p0.y - cy;
+      
+      const a = dx * dx + dy * dy;
+      const b = 2 * (fx * dx + fy * dy);
+      const c = fx * fx + fy * fy - radius * radius;
+      
+      const discriminant = b * b - 4 * a * c;
+      if (discriminant < 0) return null;
+      
+      const sqrtD = Math.sqrt(discriminant);
+      let t1 = (-b - sqrtD) / (2 * a);
+      let t2 = (-b + sqrtD) / (2 * a);
+      
+      if (t1 > t2) [t1, t2] = [t2, t1];
+      
+      const hits = [];
+      for (const t of [t1, t2]) {
+        if (t >= 0 && t <= 1) {
+          const z = p0.z + t * dz;
+          if (z >= 0 && z <= height) {
+            hits.push({ t, z });
+          }
+        }
+      }
+      
+      return hits.length > 0 ? hits[0] : null;
+    }
+
+    function calculateReach(inputs, craneX, craneY) {
+      const {
+        pivotHeight, maxBoomLength, safetyMargin,
+        buildingX, buildingY, buildingLength, buildingWidth, roofHeight,
+        unitX, unitY, unitHeight,
+        treeX, treeY, treeHeight, treeRadius, ignoreTree
+      } = inputs;
+      
+      const targetX = unitX;
+      const targetY = unitY;
+      const targetZ = roofHeight + unitHeight;
+      
+      const dx = targetX - craneX;
+      const dy = targetY - craneY;
+      const horizDistance = Math.sqrt(dx * dx + dy * dy);
+      
+      if (horizDistance < 0.1) {
+        return { reachable: false, reason: 'Crane too close to target' };
+      }
+      
+      const p0 = { x: craneX, y: craneY, z: pivotHeight };
+      const targetWithClearance = targetZ + safetyMargin;
+      
+      let requiredTipHeight = targetWithClearance;
+      let limitingObstruction = 'target';
+      const clearanceChecks = [];
+      
+      const boxMin = { x: buildingX, y: buildingY, z: 0 };
+      const boxMax = { x: buildingX + buildingLength, y: buildingY + buildingWidth, z: roofHeight };
+      
+      const testTipHeight = requiredTipHeight;
+      const p1Test = { x: targetX, y: targetY, z: testTipHeight };
+      
+      const roofIntersect = lineIntersectsBox(p0, p1Test, boxMin, boxMax);
+      if (roofIntersect && roofIntersect.tMin < 0.99) {
+        const intersectX = p0.x + roofIntersect.tMin * (p1Test.x - p0.x);
+        const intersectY = p0.y + roofIntersect.tMin * (p1Test.y - p0.y);
+        
+        const edgeDist = Math.sqrt(
+          Math.pow(intersectX - craneX, 2) + 
+          Math.pow(intersectY - craneY, 2)
+        );
+        
+        const neededHeightAtEdge = roofHeight + safetyMargin;
+        const angleToEdge = Math.atan2(neededHeightAtEdge - pivotHeight, edgeDist);
+        const projectedTipHeight = pivotHeight + horizDistance * Math.tan(angleToEdge);
+        
+        if (projectedTipHeight > requiredTipHeight) {
+          requiredTipHeight = projectedTipHeight;
+          limitingObstruction = 'roof edge';
+        }
+        
+        clearanceChecks.push({
+          name: 'Roof Edge',
+          required: neededHeightAtEdge,
+          distance: edgeDist.toFixed(1),
+          ok: true
+        });
+      }
+      
+      if (!ignoreTree && treeHeight > 0) {
+        const toTree = { x: treeX - craneX, y: treeY - craneY };
+        const toTarget = { x: targetX - craneX, y: targetY - craneY };
+        const toTargetLen = Math.sqrt(toTarget.x * toTarget.x + toTarget.y * toTarget.y);
+        
+        if (toTargetLen > 0) {
+          const toTargetNorm = { x: toTarget.x / toTargetLen, y: toTarget.y / toTargetLen };
+          const projLen = toTree.x * toTargetNorm.x + toTree.y * toTargetNorm.y;
+          
+          if (projLen > 0 && projLen < toTargetLen) {
+            const perpX = toTree.x - projLen * toTargetNorm.x;
+            const perpY = toTree.y - projLen * toTargetNorm.y;
+            const perpDist = Math.sqrt(perpX * perpX + perpY * perpY);
+            
+            if (perpDist < treeRadius + 2) {
+              const treeClearanceHeight = treeHeight + safetyMargin;
+              const angleToTree = Math.atan2(treeClearanceHeight - pivotHeight, projLen);
+              const projectedTipHeightTree = pivotHeight + horizDistance * Math.tan(angleToTree);
+              
+              if (projectedTipHeightTree > requiredTipHeight) {
+                requiredTipHeight = projectedTipHeightTree;
+                limitingObstruction = 'tree';
+              }
+              
+              clearanceChecks.push({
+                name: 'Tree',
+                required: treeClearanceHeight,
+                distance: projLen.toFixed(1),
+                ok: true
+              });
+            }
+          }
+        }
+      }
+      
+      const boomAngleRad = Math.atan2(requiredTipHeight - pivotHeight, horizDistance);
+      const boomAngleDeg = boomAngleRad * 180 / Math.PI;
+      const boomLength = horizDistance / Math.cos(boomAngleRad);
+      
+      const isReachable = boomLength <= maxBoomLength && boomLength > 0 && 
+                          boomAngleDeg > 0 && boomAngleDeg < 85;
+      
+      return {
+        reachable: isReachable,
+        boomLength,
+        boomAngleDeg,
+        boomAngleRad,
+        horizDistance,
+        tipHeight: requiredTipHeight,
+        limitingObstruction,
+        clearanceChecks,
+        reason: !isReachable ? 
+          (boomLength > maxBoomLength ? `Boom too short (need ${boomLength.toFixed(0)} ft)` : 'Invalid angle') : null
+      };
+    }
+
+    function generateReachabilityMap(inputs) {
+      const {
+        buildingX, buildingY, buildingLength, buildingWidth,
+        unitX, unitY
+      } = inputs;
+      
+      const gridSize = 5;
+      const margin = 80;
+      
+      const minX = Math.min(buildingX, unitX) - margin;
+      const maxX = Math.max(buildingX + buildingLength, unitX) + margin;
+      const minY = Math.min(buildingY, unitY) - margin;
+      const maxY = Math.max(buildingY + buildingWidth, unitY) + margin;
+      
+      const points = [];
+      const colors = [];
+      
+      for (let x = minX; x <= maxX; x += gridSize) {
+        for (let y = minY; y <= maxY; y += gridSize) {
+          if (x >= buildingX && x <= buildingX + buildingLength &&
+              y >= buildingY && y <= buildingY + buildingWidth) {
+            continue;
+          }
+          
+          const result = calculateReach(inputs, x, y);
+          
+          points.push(x, -0.1, y);
+          
+          if (result.reachable) {
+            const ratio = result.boomLength / inputs.maxBoomLength;
+            const g = 0.8 - ratio * 0.4;
+            colors.push(0.2, g, 0.3, 0.6);
+          } else {
+            colors.push(0.4, 0.15, 0.15, 0.3);
+          }
+        }
+      }
+      
+      return { points, colors, gridSize };
+    }
+
+    function init3D() {
+      const canvas = document.getElementById('canvas-3d');
+      const container = canvas.parentElement;
+      
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x1a1a1a);
+      
+      const width = container.clientWidth - 24;
+      const height = Math.max(450, container.clientHeight - 60);
+      
+      camera = new THREE.PerspectiveCamera(50, width / height, 1, 2000);
+      camera.position.set(-150, 120, 150);
+      camera.lookAt(60, 0, 40);
+      
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.target.set(60, 0, 40);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.1;
+      controls.maxPolarAngle = Math.PI / 2 - 0.05;
+      
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      scene.add(ambientLight);
+      
+      const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      dirLight.position.set(100, 200, 100);
+      scene.add(dirLight);
+      
+      const gridHelper = new THREE.GridHelper(400, 40, 0x444444, 0x333333);
+      scene.add(gridHelper);
+      
+      const planeGeo = new THREE.PlaneGeometry(400, 400);
+      const planeMat = new THREE.MeshBasicMaterial({ visible: false });
+      groundPlane = new THREE.Mesh(planeGeo, planeMat);
+      groundPlane.rotation.x = -Math.PI / 2;
+      groundPlane.position.y = 0;
+      scene.add(groundPlane);
+      
+      raycaster = new THREE.Raycaster();
+      mouse = new THREE.Vector2();
+      
+      canvas.addEventListener('mousedown', onMouseDown);
+      canvas.addEventListener('mousemove', onMouseMove);
+      canvas.addEventListener('mouseup', onMouseUp);
+      
+      window.addEventListener('resize', onWindowResize);
+      
+      animate();
+    }
+
+    function onMouseDown(event) {
+      const canvas = renderer.domElement;
+      const rect = canvas.getBoundingClientRect();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      
+      raycaster.setFromCamera(mouse, camera);
+      
+      if (craneMesh) {
+        const intersects = raycaster.intersectObject(craneMesh, true);
+        if (intersects.length > 0) {
+          isDraggingCrane = true;
+          controls.enabled = false;
+        }
+      }
+    }
+
+    function onMouseMove(event) {
+      if (!isDraggingCrane) return;
+      
+      const canvas = renderer.domElement;
+      const rect = canvas.getBoundingClientRect();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObject(groundPlane);
+      
+      if (intersects.length > 0) {
+        const point = intersects[0].point;
+        document.getElementById('craneX').value = Math.round(point.x);
+        document.getElementById('craneY').value = Math.round(point.z);
+        update();
+      }
+    }
+
+    function onMouseUp() {
+      isDraggingCrane = false;
+      controls.enabled = true;
+    }
+
+    function onWindowResize() {
+      const container = document.getElementById('canvas-3d').parentElement;
+      const width = container.clientWidth - 24;
+      const height = Math.max(450, container.clientHeight - 60);
+      
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    function update3DScene(inputs, result) {
+      while (scene.children.length > 4) {
+        scene.remove(scene.children[scene.children.length - 1]);
+      }
+      
+      const {
+        craneX, craneY, pivotHeight,
+        buildingX, buildingY, buildingLength, buildingWidth, roofHeight,
+        unitX, unitY, unitHeight,
+        treeX, treeY, treeHeight, treeRadius, ignoreTree
+      } = inputs;
+      
+      const buildingGeo = new THREE.BoxGeometry(buildingLength, roofHeight, buildingWidth);
+      const buildingMat = new THREE.MeshLambertMaterial({ 
+        color: 0x22c55e, 
+        transparent: true, 
+        opacity: 0.7 
+      });
+      const building = new THREE.Mesh(buildingGeo, buildingMat);
+      building.position.set(
+        buildingX + buildingLength / 2,
+        roofHeight / 2,
+        buildingY + buildingWidth / 2
+      );
+      scene.add(building);
+      
+      const edgesGeo = new THREE.EdgesGeometry(buildingGeo);
+      const edgesMat = new THREE.LineBasicMaterial({ color: 0x16a34a });
+      const edges = new THREE.LineSegments(edgesGeo, edgesMat);
+      edges.position.copy(building.position);
+      scene.add(edges);
+      
+      const unitGeo = new THREE.BoxGeometry(6, unitHeight, 4);
+      const unitMat = new THREE.MeshLambertMaterial({ color: 0xf97316 });
+      const unit = new THREE.Mesh(unitGeo, unitMat);
+      unit.position.set(unitX, roofHeight + unitHeight / 2, unitY);
+      scene.add(unit);
+      
+      if (!ignoreTree && treeHeight > 0) {
+        const trunkGeo = new THREE.CylinderGeometry(1, 1.5, treeHeight * 0.7, 8);
+        const trunkMat = new THREE.MeshLambertMaterial({ color: 0x8b4513 });
+        const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+        trunk.position.set(treeX, treeHeight * 0.35, treeY);
+        scene.add(trunk);
+        
+        const canopyGeo = new THREE.SphereGeometry(treeRadius, 16, 12);
+        const canopyMat = new THREE.MeshLambertMaterial({ color: 0x228b22 });
+        const canopy = new THREE.Mesh(canopyGeo, canopyMat);
+        canopy.position.set(treeX, treeHeight - treeRadius * 0.3, treeY);
+        scene.add(canopy);
+      }
+      
+      const craneBaseGeo = new THREE.CylinderGeometry(4, 5, 2, 16);
+      const craneMat = new THREE.MeshLambertMaterial({ color: 0x4a9eff });
+      craneMesh = new THREE.Mesh(craneBaseGeo, craneMat);
+      craneMesh.position.set(craneX, 1, craneY);
+      scene.add(craneMesh);
+      
+      const cranePoleGeo = new THREE.CylinderGeometry(1, 1.5, pivotHeight, 8);
+      const cranePole = new THREE.Mesh(cranePoleGeo, craneMat);
+      cranePole.position.set(craneX, pivotHeight / 2, craneY);
+      scene.add(cranePole);
+      
+      const pivotGeo = new THREE.SphereGeometry(2, 16, 12);
+      const pivotMesh = new THREE.Mesh(pivotGeo, craneMat);
+      pivotMesh.position.set(craneX, pivotHeight, craneY);
+      scene.add(pivotMesh);
+      
+      if (result && result.boomLength > 0) {
+        const boomPoints = [
+          new THREE.Vector3(craneX, pivotHeight, craneY),
+          new THREE.Vector3(unitX, result.tipHeight, unitY)
+        ];
+        const boomGeo = new THREE.BufferGeometry().setFromPoints(boomPoints);
+        const boomMat = new THREE.LineBasicMaterial({ 
+          color: result.reachable ? 0x60a5fa : 0xff6b6b,
+          linewidth: 2
+        });
+        boomLine = new THREE.Line(boomGeo, boomMat);
+        scene.add(boomLine);
+        
+        const loadLinePoints = [
+          new THREE.Vector3(unitX, result.tipHeight, unitY),
+          new THREE.Vector3(unitX, roofHeight + unitHeight, unitY)
+        ];
+        const loadLineGeo = new THREE.BufferGeometry().setFromPoints(loadLinePoints);
+        const loadLineMat = new THREE.LineBasicMaterial({ color: 0xfbbf24 });
+        const loadLine = new THREE.Line(loadLineGeo, loadLineMat);
+        scene.add(loadLine);
+      }
+      
+      const reachData = generateReachabilityMap(inputs);
+      const reachGeo = new THREE.BufferGeometry();
+      const positions = new Float32Array(reachData.points);
+      const colorsArr = new Float32Array(reachData.colors);
+      
+      reachGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      reachGeo.setAttribute('color', new THREE.BufferAttribute(colorsArr, 4));
+      
+      const reachMat = new THREE.PointsMaterial({
+        size: reachData.gridSize * 1.2,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.8,
+        sizeAttenuation: true
+      });
+      
+      reachabilityMesh = new THREE.Points(reachGeo, reachMat);
+      scene.add(reachabilityMesh);
+    }
+
+    function draw2D(inputs, result) {
+      const canvas = document.getElementById('canvas-2d');
+      const ctx = canvas.getContext('2d');
+      
+      const dpr = window.devicePixelRatio || 1;
+      const displayWidth = canvas.clientWidth;
+      const displayHeight = canvas.clientHeight;
+      
+      canvas.width = displayWidth * dpr;
+      canvas.height = displayHeight * dpr;
+      ctx.scale(dpr, dpr);
+      
+      ctx.clearRect(0, 0, displayWidth, displayHeight);
+      ctx.fillStyle = '#1a1a1a';
+      ctx.fillRect(0, 0, displayWidth, displayHeight);
+      
+      if (!result || !result.boomLength) return;
+      
+      const {
+        craneX, craneY, pivotHeight, safetyMargin,
+        buildingX, buildingY, buildingLength, buildingWidth, roofHeight,
+        unitX, unitY, unitHeight,
+        treeX, treeY, treeHeight, ignoreTree
+      } = inputs;
+      
+      const padding = { left: 50, right: 20, top: 20, bottom: 35 };
+      const drawWidth = displayWidth - padding.left - padding.right;
+      const drawHeight = displayHeight - padding.top - padding.bottom;
+      
+      const maxDist = result.horizDistance + 20;
+      const maxHeight = Math.max(result.tipHeight, treeHeight, roofHeight + unitHeight) + 10;
+      
+      const scaleX = drawWidth / maxDist;
+      const scaleY = drawHeight / maxHeight;
+      const scale = Math.min(scaleX, scaleY);
+      
+      const baseX = padding.left;
+      const baseY = displayHeight - padding.bottom;
+      
+      function toX(d) { return baseX + d * scale; }
+      function toY(h) { return baseY - h * scale; }
+      
+      ctx.strokeStyle = '#444';
+      ctx.fillStyle = '#666';
+      ctx.font = '9px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      
+      for (let d = 0; d <= maxDist; d += 25) {
+        ctx.beginPath();
+        ctx.moveTo(toX(d), baseY);
+        ctx.lineTo(toX(d), baseY + 4);
+        ctx.stroke();
+        ctx.fillText(d.toString(), toX(d), baseY + 14);
+      }
+      
+      ctx.textAlign = 'right';
+      for (let h = 0; h <= maxHeight; h += 20) {
+        ctx.beginPath();
+        ctx.moveTo(baseX - 4, toY(h));
+        ctx.lineTo(baseX, toY(h));
+        ctx.stroke();
+        ctx.fillText(h.toString(), baseX - 6, toY(h) + 3);
+      }
+      
+      ctx.strokeStyle = '#888';
+      ctx.beginPath();
+      ctx.moveTo(baseX, baseY);
+      ctx.lineTo(toX(maxDist), baseY);
+      ctx.stroke();
+      
+      const dx = unitX - craneX;
+      const dy = unitY - craneY;
+      const totalDist = Math.sqrt(dx * dx + dy * dy);
+      const dirX = dx / totalDist;
+      const dirY = dy / totalDist;
+      
+      const bldgCorners = [
+        { x: buildingX, y: buildingY },
+        { x: buildingX + buildingLength, y: buildingY },
+        { x: buildingX + buildingLength, y: buildingY + buildingWidth },
+        { x: buildingX, y: buildingY + buildingWidth }
+      ];
+      
+      let minBldgDist = Infinity, maxBldgDist = 0;
+      for (const corner of bldgCorners) {
+        const toCorner = { x: corner.x - craneX, y: corner.y - craneY };
+        const proj = toCorner.x * dirX + toCorner.y * dirY;
+        if (proj > 0) {
+          minBldgDist = Math.min(minBldgDist, proj);
+          maxBldgDist = Math.max(maxBldgDist, proj);
+        }
+      }
+      
+      if (minBldgDist < totalDist && maxBldgDist > 0) {
+        ctx.fillStyle = 'rgba(34, 197, 94, 0.6)';
+        ctx.fillRect(toX(minBldgDist), toY(roofHeight), 
+                     (maxBldgDist - minBldgDist) * scale, roofHeight * scale);
+        ctx.strokeStyle = '#22c55e';
+        ctx.strokeRect(toX(minBldgDist), toY(roofHeight), 
+                       (maxBldgDist - minBldgDist) * scale, roofHeight * scale);
+      }
+      
+      ctx.fillStyle = '#f97316';
+      const unitDist = totalDist;
+      ctx.fillRect(toX(unitDist) - 4, toY(roofHeight + unitHeight), 8, unitHeight * scale);
+      
+      if (!ignoreTree && treeHeight > 0) {
+        const toTree = { x: treeX - craneX, y: treeY - craneY };
+        const treeDist = toTree.x * dirX + toTree.y * dirY;
+        
+        if (treeDist > 0 && treeDist < totalDist) {
+          ctx.strokeStyle = '#8b4513';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(toX(treeDist), baseY);
+          ctx.lineTo(toX(treeDist), toY(treeHeight));
+          ctx.stroke();
+          
+          ctx.fillStyle = '#228b22';
+          ctx.beginPath();
+          ctx.arc(toX(treeDist), toY(treeHeight), 6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.lineWidth = 1;
+        }
+      }
+      
+      ctx.fillStyle = '#4a9eff';
+      ctx.beginPath();
+      ctx.arc(toX(0), toY(pivotHeight), 5, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.strokeStyle = result.reachable ? '#60a5fa' : '#ff6b6b';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(toX(0), toY(pivotHeight));
+      ctx.lineTo(toX(totalDist), toY(result.tipHeight));
+      ctx.stroke();
+      
+      ctx.strokeStyle = '#fbbf24';
+      ctx.beginPath();
+      ctx.moveTo(toX(totalDist), toY(result.tipHeight));
+      ctx.lineTo(toX(totalDist), toY(roofHeight + unitHeight));
+      ctx.stroke();
+      ctx.lineWidth = 1;
+      
+      ctx.fillStyle = '#4a9eff';
+      ctx.font = '10px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${result.boomLength.toFixed(0)} ft @ ${result.boomAngleDeg.toFixed(1)}°`, 
+                   toX(totalDist / 2), toY(pivotHeight + (result.tipHeight - pivotHeight) / 2) - 5);
+    }
+
+    function update() {
+      const validation = getInputs();
+      
+      if (!validation.valid) {
+        document.getElementById('boom-length-value').textContent = '—';
+        document.getElementById('boom-angle-value').textContent = '—';
+        document.getElementById('horiz-distance-value').textContent = '—';
+        document.getElementById('reachable-value').textContent = '—';
+        document.getElementById('reachable-item').className = 'result-item';
+        document.getElementById('clearance-detail').innerHTML = '';
+        return;
+      }
+      
+      const inputs = validation.inputs;
+      const result = calculateReach(inputs, inputs.craneX, inputs.craneY);
+      
+      document.getElementById('boom-length-value').textContent = 
+        result.boomLength ? result.boomLength.toFixed(1) : '—';
+      document.getElementById('boom-angle-value').textContent = 
+        result.boomAngleDeg ? result.boomAngleDeg.toFixed(1) + '°' : '—';
+      document.getElementById('horiz-distance-value').textContent = 
+        result.horizDistance ? result.horizDistance.toFixed(1) : '—';
+      document.getElementById('reachable-value').textContent = 
+        result.reachable ? 'YES' : 'NO';
+      
+      const reachableItem = document.getElementById('reachable-item');
+      reachableItem.className = 'result-item ' + (result.reachable ? 'reachable' : 'not-reachable');
+      
+      let detailHtml = `<strong>Limiting factor:</strong> ${result.limitingObstruction || 'N/A'}`;
+      if (result.reason) {
+        detailHtml += `<br><span class="fail">${result.reason}</span>`;
+      }
+      if (result.clearanceChecks && result.clearanceChecks.length > 0) {
+        detailHtml += '<br><strong>Clearances:</strong>';
+        for (const check of result.clearanceChecks) {
+          detailHtml += `<br>• ${check.name}: ${check.required.toFixed(0)} ft at ${check.distance} ft`;
+        }
+      }
+      document.getElementById('clearance-detail').innerHTML = detailHtml;
+      
+      update3DScene(inputs, result);
+      draw2D(inputs, result);
+    }
+
+    inputIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', update);
+    });
+
+    init3D();
+    update();
   </script>
 </body>
 </html>
