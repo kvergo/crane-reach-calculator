@@ -165,8 +165,8 @@
             <div class="input-wrapper"><label>Access Path W (ft)</label><input type="number" id="accessPathWidth" value="12" step="1"></div>
           </div>
           <div class="zone-legend">
-            <div class="zone-legend-item"><span class="zone-box" style="background:#2d5a2d"></span>West Lot</div>
-            <div class="zone-legend-item"><span class="zone-box" style="background:#5a5a2d"></span>Grass (weight limit)</div>
+            <div class="zone-legend-item"><span class="zone-box" style="background:#2d5a2d"></span>Lot 1 (West)</div>
+            <div class="zone-legend-item"><span class="zone-box" style="background:#5a5a2d"></span>Grass/Path</div>
             <div class="zone-legend-item"><span class="zone-box" style="background:#2d4a5a"></span>Lot 2 (East)</div>
             <div class="zone-legend-item"><span class="zone-box" style="background:#3a2525"></span>No-Go</div>
           </div>
@@ -285,8 +285,19 @@
 
     <div class="view-panel">
       <div class="view-3d-container">
-        <h3>3D Site — West(-X), East(+X), South(-Y toward Hwy), North(+Y)</h3>
-        <canvas id="canvas-3d"></canvas>
+        <h3>3D Site View</h3>
+        <div style="position:relative;">
+          <canvas id="canvas-3d"></canvas>
+          <div id="compass-overlay" style="position:absolute;top:10px;right:10px;width:70px;height:70px;background:rgba(0,0,0,0.6);border-radius:50%;border:2px solid #666;display:flex;align-items:center;justify-content:center;">
+            <div id="compass-inner" style="position:relative;width:60px;height:60px;">
+              <div style="position:absolute;top:2px;left:50%;transform:translateX(-50%);color:#ff6b6b;font-weight:bold;font-size:12px;">N</div>
+              <div style="position:absolute;bottom:2px;left:50%;transform:translateX(-50%);color:#888;font-size:10px;">S</div>
+              <div style="position:absolute;left:2px;top:50%;transform:translateY(-50%);color:#f97316;font-weight:bold;font-size:10px;">W</div>
+              <div style="position:absolute;right:2px;top:50%;transform:translateY(-50%);color:#888;font-size:10px;">E</div>
+              <div id="compass-needle" style="position:absolute;top:50%;left:50%;width:2px;height:24px;background:linear-gradient(to bottom, #ff6b6b 50%, #666 50%);transform-origin:center top;transform:translateX(-50%);"></div>
+            </div>
+          </div>
+        </div>
         <div class="legend">
           <div class="legend-item"><span class="legend-color" style="background:#f97316"></span>West</div>
           <div class="legend-item"><span class="legend-color" style="background:#16a34a"></span>2-St</div>
@@ -311,7 +322,7 @@
     let scene, camera, renderer, controls, craneMesh, groundPlane;
     let isDraggingCrane = false, raycaster, mouse;
     const DEFAULT_UNIT_WIDTH = 20;
-    let units = [], selectedUnitIndex = 4;
+    let units = [], selectedUnitIndex = 8; // Unit 9 from west = 4th from east (owner's unit)
     let lampPosts = [{ x: 40, height: 15 }, { x: 100, height: 15 }, { x: 160, height: 15 }];
     let walkwayTrees = [{ x: 70, height: 20, radius: 6 }, { x: 130, height: 18, radius: 5 }];
     let otherTrees = [];
@@ -356,16 +367,16 @@
       document.getElementById('footprintD').value = 12;
       document.getElementById('pivotHeight').value = 6;
       document.getElementById('highwayLaneClosure').checked = false;
-      selectedUnitIndex = 4;
+      selectedUnitIndex = 8; // Unit 9 from west = owner's unit (4th from east)
       const unitBounds = getUnitBounds(getInputs());
-      const unit5 = unitBounds[4];
+      const ownerUnit = unitBounds[8];
       const southEdge = parseFloat(document.getElementById('buildingY').value) - parseFloat(document.getElementById('buildingDepth').value);
       const walkwayW = parseFloat(document.getElementById('walkwayWidth').value);
-      document.getElementById('craneX').value = Math.round(unit5.x + unit5.width / 2);
+      document.getElementById('craneX').value = Math.round(ownerUnit.x + ownerUnit.width / 2);
       document.getElementById('craneY').value = Math.round(southEdge - walkwayW / 2);
       renderUnitsGrid();
       update();
-      alert('Loaded: Mini crane (5-ton, ~65ft boom) positioned in front of Unit 5, on the walkway south of the building.\n\nThis matches the real job: mini crane drove in from Lot 2 (East) across the grass strip.');
+      alert('Loaded: Mini crane (5-ton, ~65ft boom) positioned in front of Unit 9 (owner\'s unit, 4th from east), on the walkway south of the building.\n\nReal job route: Mini crane drove in from Parking Lot 2 (East), along the access path past tennis courts, to the south-side walkway.');
     }
 
     function loadHighwayScenario() {
@@ -376,38 +387,38 @@
       document.getElementById('footprintD').value = 20;
       document.getElementById('pivotHeight').value = 9;
       document.getElementById('highwayLaneClosure').checked = true;
-      selectedUnitIndex = 4;
+      selectedUnitIndex = 8; // Unit 9 from west = owner's unit
       const unitBounds = getUnitBounds(getInputs());
-      const unit5 = unitBounds[4];
+      const ownerUnit = unitBounds[8];
       const highwayY = parseFloat(document.getElementById('highwayY').value);
-      document.getElementById('craneX').value = Math.round(unit5.x + unit5.width / 2);
+      document.getElementById('craneX').value = Math.round(ownerUnit.x + ownerUnit.width / 2);
       document.getElementById('craneY').value = Math.round(highwayY - 15);
       renderUnitsGrid();
       update();
-      alert('Loaded: ~100ft boom truck on Highway 111 (with lane closure) positioned opposite Unit 5.\n\nBoom must clear: berm (~10ft), property wall (~6ft), walkway obstacles, and reach ~46ft+ horizontally to the AC unit.');
+      alert('Loaded: ~100ft boom truck on Highway 111 South (with lane closure) positioned opposite Unit 9 (owner\'s unit).\n\nBoom must clear: berm (~10ft), property wall (~6ft), walkway obstacles, and reach ~46ft+ horizontally to the AC unit.');
     }
 
     function compareScenarios() {
       const baseInp = getInputs();
       const unitBounds = getUnitBounds(baseInp);
-      const unit5 = unitBounds[4];
+      const ownerUnit = unitBounds[8]; // Unit 9 from west = owner's unit
       const southEdge = baseInp.buildingY - baseInp.buildingDepth;
       const walkwayW = baseInp.walkwayWidth;
       const highwayY = baseInp.highwayY;
 
-      // Scenario 1: Mini crane in front of building
+      // Scenario 1: Mini crane in front of building (via Lot 2 East access path)
       const scenario1 = {
         name: 'Mini Crane (Real Job)',
-        craneX: Math.round(unit5.x + unit5.width / 2),
+        craneX: Math.round(ownerUnit.x + ownerUnit.width / 2),
         craneY: Math.round(southEdge - walkwayW / 2),
         ...cranePresets.mini5,
         highwayLaneClosure: false
       };
 
-      // Scenario 2: Boom truck on highway
+      // Scenario 2: Boom truck on Highway 111 South
       const scenario2 = {
-        name: 'Boom Truck on Hwy 111',
-        craneX: Math.round(unit5.x + unit5.width / 2),
+        name: 'Boom Truck on Hwy 111 South',
+        craneX: Math.round(ownerUnit.x + ownerUnit.width / 2),
         craneY: Math.round(highwayY - 15),
         ...cranePresets.bt23,
         highwayLaneClosure: true
@@ -561,16 +572,18 @@
 
     function toggleSection(h) { h.parentElement.classList.toggle('collapsed'); }
 
-    function initUnits() {
+function initUnits() {
       units = [];
+      // 2-story: ends (1-2, 11-12), middle (6-7), and owner's unit (9)
+      // Indices: 0,1 (west end), 5,6 (middle), 8 (owner's = 4th from east), 10,11 (east end)
       for (let i = 0; i < 12; i++) {
-        units.push({ width: DEFAULT_UNIT_WIDTH, stories: [0,1,5,6,10,11].includes(i) ? 2 : 1 });
+        units.push({ width: DEFAULT_UNIT_WIDTH, stories: [0,1,5,6,8,10,11].includes(i) ? 2 : 1 });
       }
     }
-
+    
     function applyPreset(p) {
       for (let i = 0; i < 12; i++) {
-        if (p === 'described') units[i].stories = [0,1,5,6,10,11].includes(i) ? 2 : 1;
+        if (p === 'described') units[i].stories = [0,1,5,6,8,10,11].includes(i) ? 2 : 1;
         else if (p === 'all1') units[i].stories = 1;
         else if (p === 'all2') units[i].stories = 2;
         units[i].width = DEFAULT_UNIT_WIDTH;
@@ -832,10 +845,6 @@
       groundPlane = new THREE.Mesh(new THREE.PlaneGeometry(700, 500), new THREE.MeshBasicMaterial({ visible: false }));
       groundPlane.rotation.x = -Math.PI / 2;
       scene.add(groundPlane);
-      const westMarker = new THREE.Mesh(new THREE.ConeGeometry(4, 12, 8), new THREE.MeshLambertMaterial({ color: 0xf97316 }));
-      westMarker.position.set(-30, 6, 20);
-      westMarker.rotation.z = Math.PI / 2;
-      scene.add(westMarker);
       raycaster = new THREE.Raycaster();
       mouse = new THREE.Vector2();
       canvas.addEventListener('mousedown', onMouseDown);
@@ -869,7 +878,17 @@
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
     }
-    function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+      // Update compass needle to match camera orientation
+      const needle = document.getElementById('compass-needle');
+      if (needle) {
+        const angle = Math.atan2(camera.position.x - controls.target.x, camera.position.z - controls.target.z);
+        needle.style.transform = `translateX(-50%) rotate(${angle}rad)`;
+      }
+    }
 
     function update3DScene(inp, result) {
       while (scene.children.length > 5) scene.remove(scene.children[scene.children.length - 1]);
@@ -895,7 +914,31 @@
       acMesh.position.set(acPos.x, acPos.roofHeight + inp.unitHeight / 2, acPos.y);
       scene.add(acMesh);
 
-      // West parking lot
+      // Compass ground markers
+      const compassMarkerMat = new THREE.MeshLambertMaterial({ color: 0xff6b6b });
+      const northMarker = new THREE.Mesh(new THREE.ConeGeometry(5, 15, 8), compassMarkerMat);
+      northMarker.position.set(buildingLen / 2, 7.5, inp.buildingY + 50);
+      northMarker.rotation.x = Math.PI;
+      scene.add(northMarker);
+      
+      const southMarkerMat = new THREE.MeshLambertMaterial({ color: 0x888888 });
+      const southMarker = new THREE.Mesh(new THREE.ConeGeometry(4, 12, 8), southMarkerMat);
+      southMarker.position.set(buildingLen / 2, 6, highwayY - 50);
+      scene.add(southMarker);
+      
+      const westMarkerMat = new THREE.MeshLambertMaterial({ color: 0xf97316 });
+      const westMarker = new THREE.Mesh(new THREE.ConeGeometry(4, 12, 8), westMarkerMat);
+      westMarker.position.set(inp.westLotX - 20, 6, 20);
+      westMarker.rotation.z = Math.PI / 2;
+      scene.add(westMarker);
+      
+      const eastMarkerMat = new THREE.MeshLambertMaterial({ color: 0x4a9eff });
+      const eastMarker = new THREE.Mesh(new THREE.ConeGeometry(4, 12, 8), eastMarkerMat);
+      eastMarker.position.set(inp.clearingX + 40, 6, 20);
+      eastMarker.rotation.z = -Math.PI / 2;
+      scene.add(eastMarker);
+
+      // Parking Lot 1 (West)
       const lotMesh = new THREE.Mesh(new THREE.PlaneGeometry(westLotWidth, westLotDepth), new THREE.MeshLambertMaterial({ color: 0x3a3a3a }));
       lotMesh.rotation.x = -Math.PI / 2;
       lotMesh.position.set(westLotX + westLotWidth / 2, 0.05, westLotY + westLotDepth / 2);
@@ -926,11 +969,35 @@
       courtSurface.position.set(courtsX + courtsWidth / 2, -courtsDrop + 0.1, 0);
       scene.add(courtSurface);
 
-      // East clearing
-      const clearingMesh = new THREE.Mesh(new THREE.PlaneGeometry(60, 100), new THREE.MeshLambertMaterial({ color: 0x3a5a3a }));
-      clearingMesh.rotation.x = -Math.PI / 2;
-      clearingMesh.position.set(clearingX + 30, 0.05, 0);
-      scene.add(clearingMesh);
+      // Parking Lot 2 (East clearing)
+      const lot2Mesh = new THREE.Mesh(new THREE.PlaneGeometry(60, 100), new THREE.MeshLambertMaterial({ color: 0x3a3a3a }));
+      lot2Mesh.rotation.x = -Math.PI / 2;
+      lot2Mesh.position.set(clearingX + 30, 0.05, 0);
+      scene.add(lot2Mesh);
+      
+      // Access path from Lot 2 past tennis courts to south walkway
+      const accessPathWidth = inp.accessPathWidth || 12;
+      const pathStartX = clearingX;
+      const pathEndX = buildingLen;
+      const pathY = southEdge - walkwayWidth / 2;
+      
+      // Path along south side (connecting to walkway)
+      const southPathMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(pathStartX - pathEndX + 20, accessPathWidth),
+        new THREE.MeshLambertMaterial({ color: 0x4a4a3a, transparent: true, opacity: 0.7 })
+      );
+      southPathMesh.rotation.x = -Math.PI / 2;
+      southPathMesh.position.set((pathStartX + pathEndX) / 2, 0.12, pathY);
+      scene.add(southPathMesh);
+      
+      // Path from Lot 2 down to south side (past courts)
+      const vertPathMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(accessPathWidth, Math.abs(pathY) + 30),
+        new THREE.MeshLambertMaterial({ color: 0x4a4a3a, transparent: true, opacity: 0.7 })
+      );
+      vertPathMesh.rotation.x = -Math.PI / 2;
+      vertPathMesh.position.set(clearingX + 5, 0.12, pathY / 2 + 15);
+      scene.add(vertPathMesh);
 
       // Walkway
       const walkMesh = new THREE.Mesh(new THREE.PlaneGeometry(buildingLen, walkwayWidth), new THREE.MeshLambertMaterial({ color: 0x555555, transparent: true, opacity: 0.5 }));
