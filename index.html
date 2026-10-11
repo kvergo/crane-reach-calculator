@@ -223,10 +223,17 @@
             <div class="input-wrapper"><label>Wall Ht</label><input type="number" id="wallHeight" value="6" step="1"></div>
             <div class="input-wrapper"><label>Wall Thk</label><input type="number" id="wallThickness" value="1" step="0.5"></div>
           </div>
+          <p style="font-size:0.6rem;color:#aaa;margin:6px 0 2px 0;"><strong>Berm/Dike (sloped embankment with wall+fence at crest)</strong></p>
           <div class="input-group quad">
-            <div class="input-wrapper"><label>Berm Y</label><input type="number" id="bermY" value="-25" step="1"></div>
-            <div class="input-wrapper"><label>Berm W</label><input type="number" id="bermWidth" value="15" step="1"></div>
-            <div class="input-wrapper"><label>Berm Ht</label><input type="number" id="bermHeight" value="10" step="1"></div>
+            <div class="input-wrapper"><label>Berm Start Y</label><input type="number" id="bermY" value="-18" step="1"></div>
+            <div class="input-wrapper"><label>Near Slope W</label><input type="number" id="bermNearSlope" value="8" step="1"></div>
+            <div class="input-wrapper"><label>Crest W</label><input type="number" id="bermCrestWidth" value="4" step="1"></div>
+            <div class="input-wrapper"><label>Far Slope W</label><input type="number" id="bermFarSlope" value="10" step="1"></div>
+          </div>
+          <div class="input-group quad">
+            <div class="input-wrapper"><label>Earth Ht (ft)</label><input type="number" id="bermEarthHeight" value="7" step="0.5"></div>
+            <div class="input-wrapper"><label>Wall+Fence Ht</label><input type="number" id="bermWallFenceHeight" value="3" step="0.5"></div>
+            <div class="input-wrapper"><label>Total Crest Ht</label><input type="number" id="bermHeight" value="10" step="0.5" readonly style="background:#222;"></div>
             <div class="input-wrapper"><label>Hwy Y</label><input type="number" id="highwayY" value="-46" step="1"></div>
           </div>
           <div class="checkbox-wrapper" style="background:#3a3525;padding:4px 6px;border-radius:3px;margin-top:4px;">
@@ -618,8 +625,18 @@
     const inputIds = ['craneX','craneY','pivotHeight','maxBoomLength','safetyMargin','craneWeight','footprintW','footprintD',
       'westLotX','westLotWidth','westLotY','westLotDepth','grassX','grassWidth','grassBearing','courtsX','courtsWidth','courtsDrop','clearingX','accessPathWidth',
       'buildingX','buildingY','buildingDepth','oneStoryHeight','twoStoryHeight','unitOffsetX','unitOffsetY','unitHeight',
-      'walkwayWidth','wallY','wallHeight','wallThickness','bermY','bermWidth','bermHeight','highwayY','highwayLaneClosure',
+      'walkwayWidth','wallY','wallHeight','wallThickness',
+      'bermY','bermNearSlope','bermCrestWidth','bermFarSlope','bermEarthHeight','bermWallFenceHeight','bermHeight','highwayY','highwayLaneClosure',
       'westTreeX','westTreeY','westTreeHeight','westTreeRadius','ignoreWestTree'];
+    
+    // Auto-calculate total berm height
+    function updateBermHeight() {
+      const earthH = parseFloat(document.getElementById('bermEarthHeight').value) || 0;
+      const wallFenceH = parseFloat(document.getElementById('bermWallFenceHeight').value) || 0;
+      document.getElementById('bermHeight').value = (earthH + wallFenceH).toFixed(1);
+    }
+    document.getElementById('bermEarthHeight')?.addEventListener('input', () => { updateBermHeight(); update(); });
+    document.getElementById('bermWallFenceHeight')?.addEventListener('input', () => { updateBermHeight(); update(); });
 
     function getInputs() {
       const inp = {};
@@ -658,7 +675,8 @@
       for (const b of bounds) { if (x >= b.x && x <= b.x + b.width && y <= b.yNorth && y >= b.ySouth) return { zone: 'building', color: 'building' }; }
       if (x >= inp.buildingX && x <= buildingLen && y < southEdge && y >= southEdge - inp.walkwayWidth) return { zone: 'walkway', color: 'caution' };
       if (y <= inp.wallY && y >= inp.wallY - inp.wallThickness) return { zone: 'wall', color: 'nogo' };
-      if (y <= inp.bermY && y >= inp.bermY - inp.bermWidth) return { zone: 'berm', color: 'nogo' };
+      const bermTotalW = (inp.bermNearSlope || 8) + (inp.bermCrestWidth || 4) + (inp.bermFarSlope || 10);
+      if (y <= inp.bermY && y >= inp.bermY - bermTotalW) return { zone: 'berm', color: 'nogo' };
       if (y <= inp.highwayY) {
         if (inp.highwayLaneClosure && y >= inp.highwayY - 30) {
           return { zone: 'highway-closed', color: 'caution', note: 'Lane closure required' };
@@ -730,7 +748,18 @@
       for (const lp of inp.lampPosts) checkObs(`Lamp @${lp.x.toFixed(0)}`, inp.buildingX + lp.x, southEdge - walkwayWidth / 2, lp.height, 1);
       for (const t of inp.walkwayTrees) checkObs(`WalkTree @${t.x.toFixed(0)}`, inp.buildingX + t.x, southEdge - walkwayWidth / 2, t.height, t.radius);
       if (wallHeight > 0) for (let wx = inp.buildingX; wx < buildingLen; wx += 20) checkObs('Wall', wx, wallY - inp.wallThickness / 2, wallHeight, 1);
-      if (bermHeight > 0) for (let bx = inp.buildingX - 20; bx < buildingLen + 20; bx += 15) checkObs('Berm', bx, bermY - bermWidth / 2, bermHeight, bermWidth / 2);
+      // Berm clearance check at crest (earth + wall/fence)
+      const bermNearSlope = inp.bermNearSlope || 8;
+      const bermCrestW = inp.bermCrestWidth || 4;
+      const bermEarthH = inp.bermEarthHeight || 7;
+      const bermWallFenceH = inp.bermWallFenceHeight || 3;
+      const bermTotalH = bermEarthH + bermWallFenceH;
+      const bermCrestY = bermY - bermNearSlope - bermCrestW / 2;
+      if (bermTotalH > 0) {
+        for (let bx = inp.buildingX - 20; bx < buildingLen + 20; bx += 12) {
+          checkObs('Berm crest', bx, bermCrestY, bermTotalH, bermCrestW / 2);
+        }
+      }
       for (const t of inp.otherTrees) checkObs(`Tree @(${t.x},${t.y})`, t.x, t.y, t.height, t.radius);
 
       const boomAngleRad = Math.atan2(requiredTipHeight - pivotHeight, horizDistance);
@@ -936,18 +965,44 @@
         scene.add(wallMesh);
       }
 
-      // Berm
-      if (bermHeight > 0) {
+      // Berm/Dike with sloped profile and wall+fence at crest
+      const bermNearSlope = inp.bermNearSlope || 8;
+      const bermCrestW = inp.bermCrestWidth || 4;
+      const bermFarSlope = inp.bermFarSlope || 10;
+      const bermEarthH = inp.bermEarthHeight || 7;
+      const bermWallFenceH = inp.bermWallFenceHeight || 3;
+      const bermTotalW = bermNearSlope + bermCrestW + bermFarSlope;
+      
+      if (bermEarthH > 0) {
+        // Earth embankment (trapezoidal cross-section)
         const bermShape = new THREE.Shape();
-        bermShape.moveTo(-bermWidth / 2, 0);
-        bermShape.lineTo(bermWidth / 2, 0);
-        bermShape.lineTo(bermWidth / 4, bermHeight);
-        bermShape.lineTo(-bermWidth / 4, bermHeight);
+        bermShape.moveTo(0, 0); // near base
+        bermShape.lineTo(bermNearSlope, bermEarthH); // near slope up to crest
+        bermShape.lineTo(bermNearSlope + bermCrestW, bermEarthH); // crest flat
+        bermShape.lineTo(bermTotalW, 0); // far slope down
         bermShape.closePath();
-        const bermMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(bermShape, { depth: buildingLen + 80, bevelEnabled: false }), new THREE.MeshLambertMaterial({ color: 0x6b8e23 }));
+        
+        const bermGeo = new THREE.ExtrudeGeometry(bermShape, { depth: buildingLen + 80, bevelEnabled: false });
+        const bermMesh = new THREE.Mesh(bermGeo, new THREE.MeshLambertMaterial({ color: 0x6b8e23 }));
         bermMesh.rotation.y = Math.PI / 2;
-        bermMesh.position.set(inp.buildingX - 40, 0, bermY - bermWidth / 2);
+        bermMesh.position.set(inp.buildingX - 40, 0, bermY);
         scene.add(bermMesh);
+        
+        // Wall + fence at crest
+        if (bermWallFenceH > 0) {
+          const wallGeo = new THREE.BoxGeometry(buildingLen + 80, bermWallFenceH, 1);
+          const wallMesh = new THREE.Mesh(wallGeo, new THREE.MeshLambertMaterial({ color: 0x8b7355 }));
+          wallMesh.position.set(inp.buildingX + buildingLen / 2, bermEarthH + bermWallFenceH / 2, bermY - bermNearSlope - bermCrestW / 2);
+          scene.add(wallMesh);
+          
+          // Fence posts indicator
+          for (let fx = inp.buildingX; fx < buildingLen; fx += 15) {
+            const postGeo = new THREE.BoxGeometry(0.5, bermWallFenceH + 1, 0.5);
+            const postMesh = new THREE.Mesh(postGeo, new THREE.MeshLambertMaterial({ color: 0x444444 }));
+            postMesh.position.set(fx, bermEarthH + bermWallFenceH / 2 + 0.5, bermY - bermNearSlope - bermCrestW / 2);
+            scene.add(postMesh);
+          }
+        }
       }
 
       // Highway
