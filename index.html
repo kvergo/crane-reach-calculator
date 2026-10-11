@@ -7,553 +7,292 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <style>
-    *, *::before, *::after {
-      box-sizing: border-box;
-    }
-    
+    *, *::before, *::after { box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-      margin: 0;
-      padding: 16px;
-      background-color: #1e1e1e;
-      color: #f0f0f0;
-      line-height: 1.5;
+      margin: 0; padding: 10px;
+      background-color: #1e1e1e; color: #f0f0f0; line-height: 1.4;
     }
-    
-    h1 {
-      font-size: 1.8rem;
-      margin: 0 0 16px 0;
-      text-align: center;
+    h1 { font-size: 1.5rem; margin: 0 0 10px 0; text-align: center; }
+    .main-layout { display: grid; grid-template-columns: 420px 1fr; gap: 10px; max-width: 1900px; margin: 0 auto; }
+    .controls-panel { display: flex; flex-direction: column; gap: 8px; max-height: calc(100vh - 70px); overflow-y: auto; }
+    .view-panel { display: flex; flex-direction: column; gap: 10px; }
+    .input-section { background: #2a2a2a; border-radius: 6px; padding: 8px; }
+    .input-section h2 { font-size: 0.75rem; margin: 0 0 6px 0; color: #aaa; text-transform: uppercase; cursor: pointer; user-select: none; }
+    .input-section h2::before { content: '▼ '; font-size: 0.65rem; }
+    .input-section.collapsed h2::before { content: '▶ '; }
+    .input-section.collapsed .section-content { display: none; }
+    .input-group { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+    .input-group.triple { grid-template-columns: 1fr 1fr 1fr; }
+    .input-group.quad { grid-template-columns: 1fr 1fr 1fr 1fr; }
+    .input-group.single { grid-template-columns: 1fr; }
+    .input-wrapper { display: flex; flex-direction: column; }
+    .input-wrapper label { font-size: 0.65rem; margin-bottom: 1px; color: #bbb; }
+    .input-wrapper input[type="number"], .input-wrapper select {
+      background-color: #333; color: #fff; border: 1px solid #555;
+      padding: 4px 5px; border-radius: 3px; font-size: 0.8rem; width: 100%;
     }
-    
-    .main-layout {
-      display: grid;
-      grid-template-columns: 380px 1fr;
-      gap: 16px;
-      max-width: 1800px;
-      margin: 0 auto;
-    }
-    
-    .controls-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      max-height: calc(100vh - 100px);
-      overflow-y: auto;
-    }
-    
-    .view-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    
-    .input-section {
-      background: #2a2a2a;
-      border-radius: 8px;
-      padding: 12px;
-    }
-    
-    .input-section h2 {
-      font-size: 0.85rem;
-      margin: 0 0 10px 0;
-      color: #aaa;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    .input-group {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-    
-    .input-group.triple {
-      grid-template-columns: 1fr 1fr 1fr;
-    }
-    
-    .input-group.single {
-      grid-template-columns: 1fr;
-    }
-    
-    .input-wrapper {
-      display: flex;
-      flex-direction: column;
-    }
-    
-    .input-wrapper label {
-      font-size: 0.75rem;
-      margin-bottom: 2px;
-      color: #bbb;
-    }
-    
-    .input-wrapper input[type="number"],
-    .input-wrapper select {
-      background-color: #333;
-      color: #fff;
-      border: 1px solid #555;
-      padding: 6px 8px;
-      border-radius: 4px;
-      font-size: 0.9rem;
-      width: 100%;
-    }
-    
-    .input-wrapper input[type="number"]:focus,
-    .input-wrapper select:focus {
-      outline: none;
-      border-color: #4a9eff;
-    }
-    
-    .input-wrapper input[type="number"].error {
-      border-color: #ff6b6b;
-      background-color: #3a2525;
-    }
-    
-    .input-wrapper .error-message {
-      color: #ff6b6b;
-      font-size: 0.7rem;
-      margin-top: 2px;
-      min-height: 1em;
-    }
-    
-    .checkbox-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 0;
-    }
-    
-    .checkbox-wrapper input[type="checkbox"] {
-      width: 16px;
-      height: 16px;
-      accent-color: #4a9eff;
-      cursor: pointer;
-    }
-    
-    .checkbox-wrapper label {
-      cursor: pointer;
-      font-size: 0.85rem;
-    }
-    
-    .units-grid {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 4px;
-      margin-bottom: 8px;
-    }
-    
-    .unit-cell {
-      background: #333;
-      border: 1px solid #555;
-      border-radius: 4px;
-      padding: 4px;
-      text-align: center;
-      font-size: 0.7rem;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    
-    .unit-cell:hover {
-      border-color: #4a9eff;
-    }
-    
-    .unit-cell.two-story {
-      background: #3d5a3d;
-      border-color: #4a7a4a;
-    }
-    
-    .unit-cell.selected {
-      border-color: #f97316;
-      background: #5a3d2a;
-    }
-    
-    .unit-cell .unit-num {
-      font-weight: bold;
-      color: #fff;
-    }
-    
-    .unit-cell .unit-height {
-      color: #aaa;
-      font-size: 0.65rem;
-    }
-    
-    .unit-controls {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 6px;
-      margin-top: 8px;
-      padding-top: 8px;
-      border-top: 1px solid #444;
-    }
-    
-    .unit-controls .input-wrapper label {
-      font-size: 0.7rem;
-    }
-    
-    .unit-controls input {
-      padding: 4px 6px;
-      font-size: 0.8rem;
-    }
-    
-    .preset-buttons {
-      display: flex;
-      gap: 6px;
-      margin-top: 8px;
-    }
-    
-    .preset-btn {
-      flex: 1;
-      padding: 6px 8px;
-      background: #444;
-      border: 1px solid #555;
-      border-radius: 4px;
-      color: #fff;
-      font-size: 0.75rem;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    
-    .preset-btn:hover {
-      background: #555;
-      border-color: #666;
-    }
-    
-    .results-section {
-      background: #2a2a2a;
-      border-radius: 8px;
-      padding: 12px;
-    }
-    
-    .results-section h2 {
-      font-size: 0.85rem;
-      margin: 0 0 10px 0;
-      color: #aaa;
-      text-transform: uppercase;
-    }
-    
-    .results-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-    
-    .result-item {
-      text-align: center;
-      padding: 8px;
-      background: #333;
-      border-radius: 6px;
-    }
-    
-    .result-item .value {
-      font-size: 1.3rem;
-      font-weight: bold;
-      color: #4a9eff;
-    }
-    
-    .result-item .label {
-      font-size: 0.7rem;
-      color: #888;
-      text-transform: uppercase;
-    }
-    
-    .result-item.reachable .value {
-      color: #4ade80;
-    }
-    
-    .result-item.not-reachable .value {
-      color: #ff6b6b;
-    }
-    
-    .view-3d-container {
-      background: #2a2a2a;
-      border-radius: 8px;
-      padding: 12px;
-      flex: 1;
-      min-height: 500px;
-    }
-    
-    .view-3d-container h3 {
-      margin: 0 0 8px 0;
-      font-size: 0.9rem;
-      color: #aaa;
-    }
-    
-    #canvas-3d {
-      width: 100%;
-      height: 100%;
-      min-height: 450px;
-      border-radius: 4px;
-      cursor: grab;
-    }
-    
-    #canvas-3d:active {
-      cursor: grabbing;
-    }
-    
-    .view-2d-container {
-      background: #2a2a2a;
-      border-radius: 8px;
-      padding: 12px;
-    }
-    
-    .view-2d-container h3 {
-      margin: 0 0 8px 0;
-      font-size: 0.9rem;
-      color: #aaa;
-    }
-    
-    #canvas-2d {
-      width: 100%;
-      height: 180px;
-      background: #1a1a1a;
-      border-radius: 4px;
-    }
-    
-    .legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 8px;
-      padding-top: 8px;
-      border-top: 1px solid #444;
-    }
-    
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 0.75rem;
-      color: #aaa;
-    }
-    
-    .legend-color {
-      width: 14px;
-      height: 14px;
-      border-radius: 3px;
-    }
-    
-    .legend-color.building-1 { background: #22c55e; }
-    .legend-color.building-2 { background: #16a34a; }
-    .legend-color.ac-unit { background: #f97316; }
-    .legend-color.tree { background: #8b4513; }
-    .legend-color.crane { background: #4a9eff; }
-    .legend-color.boom { background: #60a5fa; }
-    .legend-color.reachable { background: rgba(74, 222, 128, 0.5); }
-    .legend-color.unreachable { background: rgba(255, 107, 107, 0.3); }
-    
-    .instructions {
-      font-size: 0.75rem;
-      color: #888;
-      margin-top: 8px;
-      padding: 8px;
-      background: #333;
-      border-radius: 4px;
-    }
-    
-    .clearance-detail {
-      font-size: 0.75rem;
-      color: #aaa;
-      margin-top: 8px;
-      padding: 8px;
-      background: #333;
-      border-radius: 4px;
-    }
-    
-    .clearance-detail .ok { color: #4ade80; }
+    .input-wrapper input:focus, .input-wrapper select:focus { outline: none; border-color: #4a9eff; }
+    .checkbox-wrapper { display: flex; align-items: center; gap: 5px; padding: 3px 0; }
+    .checkbox-wrapper input[type="checkbox"] { width: 13px; height: 13px; accent-color: #4a9eff; }
+    .checkbox-wrapper label { font-size: 0.75rem; cursor: pointer; }
+    .units-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; }
+    .unit-cell { background: #333; border: 1px solid #555; border-radius: 2px; padding: 2px; text-align: center; font-size: 0.6rem; cursor: pointer; }
+    .unit-cell:hover { border-color: #4a9eff; }
+    .unit-cell.two-story { background: #3d5a3d; border-color: #4a7a4a; }
+    .unit-cell.selected { border-color: #f97316; background: #5a3d2a; }
+    .unit-cell .unit-num { font-weight: bold; color: #fff; }
+    .preset-buttons { display: flex; gap: 3px; margin-top: 4px; }
+    .preset-btn { flex: 1; padding: 3px 4px; background: #444; border: 1px solid #555; border-radius: 2px; color: #fff; font-size: 0.65rem; cursor: pointer; }
+    .preset-btn:hover { background: #555; }
+    .results-section { background: #2a2a2a; border-radius: 6px; padding: 8px; }
+    .results-section h2 { font-size: 0.75rem; margin: 0 0 6px 0; color: #aaa; text-transform: uppercase; }
+    .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .result-item { text-align: center; padding: 5px; background: #333; border-radius: 4px; }
+    .result-item .value { font-size: 1.1rem; font-weight: bold; color: #4a9eff; }
+    .result-item .label { font-size: 0.6rem; color: #888; text-transform: uppercase; }
+    .result-item.reachable .value { color: #4ade80; }
+    .result-item.not-reachable .value { color: #ff6b6b; }
+    .result-item.caution .value { color: #fbbf24; }
+    .clearance-detail { font-size: 0.65rem; color: #aaa; margin-top: 5px; padding: 5px; background: #333; border-radius: 3px; }
     .clearance-detail .fail { color: #ff6b6b; }
+    .clearance-detail .warn { color: #fbbf24; }
+    .view-3d-container { background: #2a2a2a; border-radius: 6px; padding: 8px; flex: 1; min-height: 450px; }
+    .view-3d-container h3 { margin: 0 0 5px 0; font-size: 0.8rem; color: #aaa; }
+    #canvas-3d { width: 100%; height: 100%; min-height: 400px; border-radius: 4px; cursor: grab; }
+    #canvas-3d:active { cursor: grabbing; }
+    .view-2d-container { background: #2a2a2a; border-radius: 6px; padding: 8px; }
+    .view-2d-container h3 { margin: 0 0 5px 0; font-size: 0.8rem; color: #aaa; }
+    #canvas-2d { width: 100%; height: 150px; background: #1a1a1a; border-radius: 4px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; padding-top: 5px; border-top: 1px solid #444; }
+    .legend-item { display: flex; align-items: center; gap: 3px; font-size: 0.65rem; color: #aaa; }
+    .legend-color { width: 10px; height: 10px; border-radius: 2px; }
+    .obstacle-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 3px; align-items: end; margin-bottom: 3px; padding: 3px; background: #333; border-radius: 2px; }
+    .obstacle-row .input-wrapper label { font-size: 0.6rem; }
+    .obstacle-row input { padding: 2px 3px; font-size: 0.75rem; }
+    .obstacle-row .remove-btn { background: #5a3333; border: none; color: #ff6b6b; padding: 3px 6px; border-radius: 2px; cursor: pointer; font-size: 0.75rem; }
+    .add-btn { background: #3a5a3a; border: 1px solid #4a7a4a; color: #4ade80; padding: 3px 6px; border-radius: 2px; cursor: pointer; font-size: 0.7rem; margin-top: 3px; }
+    .zone-legend { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; padding: 4px; background: #333; border-radius: 3px; }
+    .zone-legend-item { display: flex; align-items: center; gap: 3px; font-size: 0.6rem; }
+    .zone-box { width: 12px; height: 12px; border-radius: 2px; }
+    .warning-box { background: #5a4a2a; border: 1px solid #fbbf24; border-radius: 3px; padding: 4px 6px; margin-top: 4px; font-size: 0.65rem; color: #fbbf24; }
+    .warning-box strong { color: #fff; }
   </style>
 </head>
 <body>
   <h1>Crane Reach Calculator</h1>
-  
   <div class="main-layout">
     <div class="controls-panel">
       <div class="input-section">
-        <h2>Crane Position &amp; Setup</h2>
-        <div class="input-group">
-          <div class="input-wrapper">
-            <label for="craneX">Crane X (ft)</label>
-            <input type="number" id="craneX" value="-30" step="1">
-          </div>
-          <div class="input-wrapper">
-            <label for="craneY">Crane Y (ft)</label>
-            <input type="number" id="craneY" value="40" step="1">
-          </div>
-          <div class="input-wrapper">
-            <label for="pivotHeight">Pivot Height (ft)</label>
-            <input type="number" id="pivotHeight" value="8" step="0.5">
-          </div>
-          <div class="input-wrapper">
-            <label for="maxBoomLength">Max Boom (ft)</label>
-            <input type="number" id="maxBoomLength" value="250" step="1">
-          </div>
-        </div>
-        <div class="input-group single">
-          <div class="input-wrapper">
-            <label for="safetyMargin">Safety Clearance (ft)</label>
-            <input type="number" id="safetyMargin" value="5" step="0.5">
-          </div>
-        </div>
-        <div class="instructions">
-          Drag the blue crane marker on the ground plane, or enter coordinates above.
-        </div>
-      </div>
-
-      <div class="input-section">
-        <h2>Building Row (12 Units)</h2>
-        <p style="font-size: 0.75rem; color: #888; margin: 0 0 8px 0;">
-          Click a unit to select it for the AC. Green = 2-story, darker = 1-story.
-        </p>
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-          <span style="font-size: 0.7rem; color: #f97316; font-weight: bold;">← WEST</span>
-          <div class="units-grid" id="units-grid" style="flex: 1;"></div>
-          <span style="font-size: 0.7rem; color: #888;">EAST →</span>
-        </div>
-        
-        <div class="input-group">
-          <div class="input-wrapper">
-            <label for="buildingX">Row Start X (ft)</label>
-            <input type="number" id="buildingX" value="0" step="1">
-          </div>
-          <div class="input-wrapper">
-            <label for="buildingY">Row Start Y (ft)</label>
-            <input type="number" id="buildingY" value="20" step="1">
-          </div>
-        </div>
-        <div class="input-group">
-          <div class="input-wrapper">
-            <label for="buildingDepth">Building Depth (ft)</label>
-            <input type="number" id="buildingDepth" value="40" step="1">
-          </div>
-          <div class="input-wrapper">
-            <label for="oneStoryHeight">1-Story Height (ft)</label>
-            <input type="number" id="oneStoryHeight" value="14" step="1">
-          </div>
-        </div>
-        <div class="input-group single">
-          <div class="input-wrapper">
-            <label for="twoStoryHeight">2-Story Height (ft)</label>
-            <input type="number" id="twoStoryHeight" value="25" step="1">
-          </div>
-        </div>
-        
-        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #444;">
-          <p style="font-size: 0.75rem; color: #aaa; margin: 0 0 6px 0;">
-            <strong>Selected Unit: <span id="selected-unit-label">Unit 5 from West</span></strong>
-          </p>
-          <div class="unit-controls">
+        <h2 onclick="toggleSection(this)">Crane Setup</h2>
+        <div class="section-content">
+          <div class="input-group single">
             <div class="input-wrapper">
-              <label>Width (ft)</label>
-              <input type="number" id="selectedUnitWidth" value="20" step="1">
-            </div>
-            <div class="input-wrapper">
-              <label>Stories</label>
-              <select id="selectedUnitStories">
-                <option value="1">1-Story</option>
-                <option value="2">2-Story</option>
-              </select>
-            </div>
-            <div class="input-wrapper">
-              <label>AC on this?</label>
-              <select id="acUnitSelect" disabled>
-                <option value="yes">Yes</option>
+              <label>Crane Type (typical specs — verify with rental co.)</label>
+              <select id="cranePreset" onchange="applyCranePreset()">
+                <option value="custom">Custom / Manual Entry</option>
+                <optgroup label="Mini / Spider Cranes">
+                  <option value="mini3">Mini Crane 3-ton (~50ft boom, ~3t, 12×10ft)</option>
+                  <option value="mini5">Mini Crane 5-ton (~65ft boom, ~5t, 14×12ft)</option>
+                  <option value="mini8">Mini Crane 8-ton (~80ft boom, ~8t, 16×14ft)</option>
+                </optgroup>
+                <optgroup label="Boom Trucks">
+                  <option value="bt8">Boom Truck 8-ton (~60ft boom, ~18t)</option>
+                  <option value="bt15">Boom Truck 15-ton (~80ft boom, ~24t)</option>
+                  <option value="bt23">Boom Truck 23-ton (~102ft boom, ~30t)</option>
+                  <option value="bt30">Boom Truck 30-ton (~115ft boom, ~36t)</option>
+                </optgroup>
+                <optgroup label="Hydraulic Truck Cranes">
+                  <option value="htc40">Hydraulic Truck 40-ton (~127ft boom, ~42t)</option>
+                  <option value="htc50">Hydraulic Truck 50-ton (~140ft boom, ~48t)</option>
+                  <option value="htc70">Hydraulic Truck 70-ton (~154ft boom, ~58t)</option>
+                  <option value="htc100">Hydraulic Truck 100-ton (~180ft boom, ~72t)</option>
+                  <option value="htc130">Hydraulic Truck 130-ton (~197ft boom, ~85t)</option>
+                </optgroup>
+                <optgroup label="All-Terrain Cranes">
+                  <option value="at60">All-Terrain 60-ton (~147ft boom, ~52t)</option>
+                  <option value="at100" selected>All-Terrain 100-ton (~197ft boom, ~68t)</option>
+                  <option value="at160">All-Terrain 160-ton (~230ft boom, ~88t)</option>
+                  <option value="at220">All-Terrain 220-ton (~250ft boom, ~96t)</option>
+                </optgroup>
               </select>
             </div>
           </div>
-        </div>
-        
-        <div class="preset-buttons">
-          <button class="preset-btn" onclick="applyPreset('described')">Owner's Layout</button>
-          <button class="preset-btn" onclick="applyPreset('all1')">All 1-Story</button>
-          <button class="preset-btn" onclick="applyPreset('all2')">All 2-Story</button>
-        </div>
-      </div>
-
-      <div class="input-section">
-        <h2>AC Unit Position</h2>
-        <div class="input-group">
-          <div class="input-wrapper">
-            <label for="unitOffsetX">Offset from Unit Edge (ft)</label>
-            <input type="number" id="unitOffsetX" value="10" step="1">
+          <div class="input-group quad">
+            <div class="input-wrapper"><label>Max Boom (ft)</label><input type="number" id="maxBoomLength" value="197" step="1"></div>
+            <div class="input-wrapper"><label>Weight (tons)</label><input type="number" id="craneWeight" value="68" step="1"></div>
+            <div class="input-wrapper"><label>Footprint W (ft)</label><input type="number" id="footprintW" value="24" step="1"></div>
+            <div class="input-wrapper"><label>Footprint D (ft)</label><input type="number" id="footprintD" value="20" step="1"></div>
           </div>
-          <div class="input-wrapper">
-            <label for="unitOffsetY">Offset from Front (ft)</label>
-            <input type="number" id="unitOffsetY" value="20" step="1">
+          <div class="input-group quad">
+            <div class="input-wrapper"><label>Crane X (ft)</label><input type="number" id="craneX" value="-45" step="1"></div>
+            <div class="input-wrapper"><label>Crane Y (ft)</label><input type="number" id="craneY" value="20" step="1"></div>
+            <div class="input-wrapper"><label>Pivot Ht (ft)</label><input type="number" id="pivotHeight" value="8" step="0.5"></div>
+            <div class="input-wrapper"><label>Safety (ft)</label><input type="number" id="safetyMargin" value="5" step="0.5"></div>
           </div>
-          <div class="input-wrapper">
-            <label for="unitHeight">AC Height (ft)</label>
-            <input type="number" id="unitHeight" value="3" step="0.5">
+          <p style="font-size:0.55rem;color:#888;margin:4px 0 0 0;">⚠ All specs are <em>typical approximate values</em>. Actual specs vary by manufacturer, config, counterweight. Always verify against the rental company's load charts.</p>
+          <div style="display:flex;gap:3px;margin-top:6px;flex-wrap:wrap;">
+            <button class="preset-btn" style="flex:1;background:#3a5a3a;border-color:#4a8a4a;min-width:45%;" onclick="loadRealJobScenario()">Real Job: Mini Crane</button>
+            <button class="preset-btn" style="flex:1;background:#5a4a3a;border-color:#8a6a4a;min-width:45%;" onclick="loadHighwayScenario()">Alt: Hwy 111 Crane</button>
+          </div>
+          <div style="display:flex;gap:3px;margin-top:4px;">
+            <button class="preset-btn" style="flex:1;background:#3a4a5a;border-color:#4a6a8a;" onclick="showCraneComparison()">Compare All Cranes</button>
+            <button class="preset-btn" style="flex:1;background:#4a3a5a;border-color:#6a4a8a;" onclick="compareScenarios()">Compare 2 Scenarios</button>
           </div>
         </div>
       </div>
 
       <div class="input-section">
-        <h2>Tree Obstruction</h2>
-        <div class="input-group">
-          <div class="input-wrapper">
-            <label for="treeX">Position X (ft)</label>
-            <input type="number" id="treeX" value="-15" step="1">
+        <h2 onclick="toggleSection(this)">Site Zones</h2>
+        <div class="section-content">
+          <p style="font-size:0.6rem;color:#888;margin:0 0 4px 0;">West=left(-X), East=right(+X). Building at X=0.</p>
+          <div class="input-group quad">
+            <div class="input-wrapper"><label>West Lot X Start</label><input type="number" id="westLotX" value="-80" step="1"></div>
+            <div class="input-wrapper"><label>West Lot Width</label><input type="number" id="westLotWidth" value="50" step="1"></div>
+            <div class="input-wrapper"><label>West Lot Y Start</label><input type="number" id="westLotY" value="-10" step="1"></div>
+            <div class="input-wrapper"><label>West Lot Depth</label><input type="number" id="westLotDepth" value="70" step="1"></div>
           </div>
-          <div class="input-wrapper">
-            <label for="treeY">Position Y (ft)</label>
-            <input type="number" id="treeY" value="35" step="1">
+          <div class="input-group quad">
+            <div class="input-wrapper"><label>East Grass X Start</label><input type="number" id="grassX" value="245" step="1"></div>
+            <div class="input-wrapper"><label>Grass Width</label><input type="number" id="grassWidth" value="30" step="1"></div>
+            <div class="input-wrapper"><label>Grass Bearing (tons)</label><input type="number" id="grassBearing" value="25" step="1"></div>
+            <div class="input-wrapper"><label>Courts X Start</label><input type="number" id="courtsX" value="275" step="1"></div>
           </div>
-          <div class="input-wrapper">
-            <label for="treeHeight">Height (ft)</label>
-            <input type="number" id="treeHeight" value="41" step="1">
+          <div class="input-group quad">
+            <div class="input-wrapper"><label>Courts Width</label><input type="number" id="courtsWidth" value="80" step="1"></div>
+            <div class="input-wrapper"><label>Courts Drop (ft)</label><input type="number" id="courtsDrop" value="8" step="1"></div>
+            <div class="input-wrapper"><label>Lot 2 (East) X</label><input type="number" id="clearingX" value="355" step="1"></div>
+            <div class="input-wrapper"><label>Access Path W (ft)</label><input type="number" id="accessPathWidth" value="12" step="1"></div>
           </div>
-          <div class="input-wrapper">
-            <label for="treeRadius">Canopy Radius (ft)</label>
-            <input type="number" id="treeRadius" value="8" step="1">
+          <div class="zone-legend">
+            <div class="zone-legend-item"><span class="zone-box" style="background:#2d5a2d"></span>West Lot</div>
+            <div class="zone-legend-item"><span class="zone-box" style="background:#5a5a2d"></span>Grass (weight limit)</div>
+            <div class="zone-legend-item"><span class="zone-box" style="background:#2d4a5a"></span>Lot 2 (East)</div>
+            <div class="zone-legend-item"><span class="zone-box" style="background:#3a2525"></span>No-Go</div>
           </div>
         </div>
-        <div class="checkbox-wrapper">
-          <input type="checkbox" id="ignoreTree">
-          <label for="ignoreTree">Ignore Tree</label>
+      </div>
+
+      <div class="input-section">
+        <h2 onclick="toggleSection(this)">Building (12 Units W→E)</h2>
+        <div class="section-content">
+          <div style="display:flex;align-items:center;gap:4px;margin-bottom:3px;">
+            <span style="font-size:0.6rem;color:#f97316;font-weight:bold;">←W</span>
+            <div class="units-grid" id="units-grid" style="flex:1;"></div>
+            <span style="font-size:0.6rem;color:#888;">E→</span>
+          </div>
+          <div class="input-group quad">
+            <div class="input-wrapper"><label>Start X</label><input type="number" id="buildingX" value="0" step="1"></div>
+            <div class="input-wrapper"><label>North Y</label><input type="number" id="buildingY" value="40" step="1"></div>
+            <div class="input-wrapper"><label>Depth</label><input type="number" id="buildingDepth" value="40" step="1"></div>
+            <div class="input-wrapper"><label>1-St Ht</label><input type="number" id="oneStoryHeight" value="14" step="1"></div>
+          </div>
+          <div class="input-group">
+            <div class="input-wrapper"><label>2-Story Height</label><input type="number" id="twoStoryHeight" value="25" step="1"></div>
+            <div>
+              <span style="font-size:0.6rem;color:#aaa;">Unit <span id="selected-unit-label">5</span>:</span>
+              <input type="number" id="selectedUnitWidth" value="20" step="1" style="width:40px;padding:2px;font-size:0.7rem;background:#333;color:#fff;border:1px solid #555;">ft
+              <select id="selectedUnitStories" style="padding:2px;font-size:0.7rem;background:#333;color:#fff;border:1px solid #555;"><option value="1">1-St</option><option value="2">2-St</option></select>
+            </div>
+          </div>
+          <div class="preset-buttons">
+            <button class="preset-btn" onclick="applyPreset('described')">Owner's</button>
+            <button class="preset-btn" onclick="applyPreset('all1')">All 1-St</button>
+            <button class="preset-btn" onclick="applyPreset('all2')">All 2-St</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-section">
+        <h2 onclick="toggleSection(this)">AC Unit Target</h2>
+        <div class="section-content">
+          <div class="input-group triple">
+            <div class="input-wrapper"><label>Offset from W Edge</label><input type="number" id="unitOffsetX" value="10" step="1"></div>
+            <div class="input-wrapper"><label>Offset from N</label><input type="number" id="unitOffsetY" value="20" step="1"></div>
+            <div class="input-wrapper"><label>AC Height</label><input type="number" id="unitHeight" value="3" step="0.5"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-section">
+        <h2 onclick="toggleSection(this)">South Side Features</h2>
+        <div class="section-content">
+          <div class="input-group quad">
+            <div class="input-wrapper"><label>Walkway W</label><input type="number" id="walkwayWidth" value="12" step="1"></div>
+            <div class="input-wrapper"><label>Wall Y</label><input type="number" id="wallY" value="-15" step="1"></div>
+            <div class="input-wrapper"><label>Wall Ht</label><input type="number" id="wallHeight" value="6" step="1"></div>
+            <div class="input-wrapper"><label>Wall Thk</label><input type="number" id="wallThickness" value="1" step="0.5"></div>
+          </div>
+          <div class="input-group quad">
+            <div class="input-wrapper"><label>Berm Y</label><input type="number" id="bermY" value="-25" step="1"></div>
+            <div class="input-wrapper"><label>Berm W</label><input type="number" id="bermWidth" value="15" step="1"></div>
+            <div class="input-wrapper"><label>Berm Ht</label><input type="number" id="bermHeight" value="10" step="1"></div>
+            <div class="input-wrapper"><label>Hwy Y</label><input type="number" id="highwayY" value="-46" step="1"></div>
+          </div>
+          <div class="checkbox-wrapper" style="background:#3a3525;padding:4px 6px;border-radius:3px;margin-top:4px;">
+            <input type="checkbox" id="highwayLaneClosure">
+            <label for="highwayLaneClosure" style="color:#fbbf24;">Highway lane closure — allows crane on near lanes of Hwy 111</label>
+          </div>
+          <p style="font-size:0.6rem;color:#aaa;margin:4px 0 2px 0;"><strong>Lamp Posts</strong></p>
+          <div id="lampPosts-container"></div>
+          <button class="add-btn" onclick="addLampPost()">+ Lamp</button>
+          <p style="font-size:0.6rem;color:#aaa;margin:4px 0 2px 0;"><strong>Walkway Trees</strong></p>
+          <div id="walkwayTrees-container"></div>
+          <button class="add-btn" onclick="addWalkwayTree()">+ Tree</button>
+        </div>
+      </div>
+
+      <div class="input-section">
+        <h2 onclick="toggleSection(this)">Trees &amp; Obstacles</h2>
+        <div class="section-content">
+          <p style="font-size:0.6rem;color:#aaa;margin:0 0 2px 0;"><strong>West Lot Tree (between lot &amp; building)</strong></p>
+          <div class="input-group quad">
+            <div class="input-wrapper"><label>X</label><input type="number" id="westTreeX" value="-20" step="1"></div>
+            <div class="input-wrapper"><label>Y</label><input type="number" id="westTreeY" value="20" step="1"></div>
+            <div class="input-wrapper"><label>Height</label><input type="number" id="westTreeHeight" value="45" step="1"></div>
+            <div class="input-wrapper"><label>Radius</label><input type="number" id="westTreeRadius" value="10" step="1"></div>
+          </div>
+          <div class="checkbox-wrapper">
+            <input type="checkbox" id="ignoreWestTree"><label for="ignoreWestTree">Ignore this tree</label>
+          </div>
+          <p style="font-size:0.6rem;color:#aaa;margin:6px 0 2px 0;"><strong>Other Trees</strong></p>
+          <div id="trees-container"></div>
+          <button class="add-btn" onclick="addTree()">+ Tree</button>
         </div>
       </div>
 
       <div class="results-section">
         <h2>Results</h2>
         <div class="results-grid">
-          <div class="result-item">
-            <div class="value" id="boom-length-value">—</div>
-            <div class="label">Boom Length (ft)</div>
-          </div>
-          <div class="result-item">
-            <div class="value" id="boom-angle-value">—</div>
-            <div class="label">Boom Angle</div>
-          </div>
-          <div class="result-item">
-            <div class="value" id="horiz-distance-value">—</div>
-            <div class="label">Horiz. Distance (ft)</div>
-          </div>
-          <div class="result-item" id="reachable-item">
-            <div class="value" id="reachable-value">—</div>
-            <div class="label">Reachable?</div>
-          </div>
+          <div class="result-item"><div class="value" id="boom-length-value">—</div><div class="label">Boom (ft)</div></div>
+          <div class="result-item"><div class="value" id="boom-angle-value">—</div><div class="label">Angle</div></div>
+          <div class="result-item"><div class="value" id="horiz-distance-value">—</div><div class="label">Horiz (ft)</div></div>
+          <div class="result-item" id="reachable-item"><div class="value" id="reachable-value">—</div><div class="label">Reachable</div></div>
         </div>
         <div class="clearance-detail" id="clearance-detail"></div>
+        <div class="warning-box" style="display:none;margin-top:6px;font-size:0.6rem;background:#333;border:1px solid #666;color:#aaa;">
+          <strong>Disclaimer:</strong> This tool provides estimates only. Actual crane selection and placement require professional engineering assessment of soil conditions, load charts, and safety factors.
+        </div>
       </div>
     </div>
 
     <div class="view-panel">
       <div class="view-3d-container">
-        <h3>3D Site View — Building runs West→East (orange arrow = West)</h3>
+        <h3>3D Site — West(-X), East(+X), South(-Y toward Hwy), North(+Y)</h3>
         <canvas id="canvas-3d"></canvas>
         <div class="legend">
-          <div class="legend-item"><span class="legend-color" style="background: #f97316;"></span> West</div>
-          <div class="legend-item"><span class="legend-color building-2"></span> 2-Story</div>
-          <div class="legend-item"><span class="legend-color building-1"></span> 1-Story</div>
-          <div class="legend-item"><span class="legend-color ac-unit"></span> AC Unit</div>
-          <div class="legend-item"><span class="legend-color tree"></span> Tree</div>
-          <div class="legend-item"><span class="legend-color crane"></span> Crane</div>
-          <div class="legend-item"><span class="legend-color boom"></span> Boom</div>
-          <div class="legend-item"><span class="legend-color reachable"></span> Reachable</div>
-          <div class="legend-item"><span class="legend-color unreachable"></span> Unreachable</div>
+          <div class="legend-item"><span class="legend-color" style="background:#f97316"></span>West</div>
+          <div class="legend-item"><span class="legend-color" style="background:#16a34a"></span>2-St</div>
+          <div class="legend-item"><span class="legend-color" style="background:#22c55e"></span>1-St</div>
+          <div class="legend-item"><span class="legend-color" style="background:#f97316"></span>AC</div>
+          <div class="legend-item"><span class="legend-color" style="background:#fbbf24"></span>Lamp</div>
+          <div class="legend-item"><span class="legend-color" style="background:#228b22"></span>Tree</div>
+          <div class="legend-item"><span class="legend-color" style="background:#4a9eff"></span>Crane</div>
+          <div class="legend-item"><span class="legend-color" style="background:#2d5a2d"></span>Lot</div>
+          <div class="legend-item"><span class="legend-color" style="background:#5a5a2d"></span>Grass</div>
+          <div class="legend-item"><span class="legend-color" style="background:#654321"></span>Courts</div>
         </div>
       </div>
-      
       <div class="view-2d-container">
         <h3>2D Side View (along boom path)</h3>
         <canvas id="canvas-2d"></canvas>
@@ -562,769 +301,810 @@
   </div>
 
   <script>
-    let scene, camera, renderer, controls;
-    let craneMesh, boomLine, groundPlane, reachabilityMesh;
-    let isDraggingCrane = false;
-    let raycaster, mouse;
-    
+    let scene, camera, renderer, controls, craneMesh, groundPlane;
+    let isDraggingCrane = false, raycaster, mouse;
     const DEFAULT_UNIT_WIDTH = 20;
-    
-    let units = [];
-    let selectedUnitIndex = 4; // Unit 5 from west (0-indexed)
-    
+    let units = [], selectedUnitIndex = 4;
+    let lampPosts = [{ x: 40, height: 15 }, { x: 100, height: 15 }, { x: 160, height: 15 }];
+    let walkwayTrees = [{ x: 70, height: 20, radius: 6 }, { x: 130, height: 18, radius: 5 }];
+    let otherTrees = [];
+
+    const cranePresets = {
+      mini3: { name: 'Mini 3-ton', boom: 50, weight: 3, footprintW: 12, footprintD: 10, pivot: 5 },
+      mini5: { name: 'Mini 5-ton', boom: 65, weight: 5, footprintW: 14, footprintD: 12, pivot: 6 },
+      mini8: { name: 'Mini 8-ton', boom: 80, weight: 8, footprintW: 16, footprintD: 14, pivot: 7 },
+      bt8: { name: 'Boom Truck 8t', boom: 60, weight: 18, footprintW: 20, footprintD: 16, pivot: 8 },
+      bt15: { name: 'Boom Truck 15t', boom: 80, weight: 24, footprintW: 22, footprintD: 18, pivot: 8 },
+      bt23: { name: 'Boom Truck 23t', boom: 102, weight: 30, footprintW: 24, footprintD: 20, pivot: 9 },
+      bt30: { name: 'Boom Truck 30t', boom: 115, weight: 36, footprintW: 26, footprintD: 22, pivot: 9 },
+      htc40: { name: 'Hyd Truck 40t', boom: 127, weight: 42, footprintW: 24, footprintD: 22, pivot: 9 },
+      htc50: { name: 'Hyd Truck 50t', boom: 140, weight: 48, footprintW: 26, footprintD: 24, pivot: 10 },
+      htc70: { name: 'Hyd Truck 70t', boom: 154, weight: 58, footprintW: 28, footprintD: 26, pivot: 10 },
+      htc100: { name: 'Hyd Truck 100t', boom: 180, weight: 72, footprintW: 30, footprintD: 28, pivot: 11 },
+      htc130: { name: 'Hyd Truck 130t', boom: 197, weight: 85, footprintW: 32, footprintD: 30, pivot: 11 },
+      at60: { name: 'All-Terrain 60t', boom: 147, weight: 52, footprintW: 26, footprintD: 24, pivot: 10 },
+      at100: { name: 'All-Terrain 100t', boom: 197, weight: 68, footprintW: 28, footprintD: 26, pivot: 11 },
+      at160: { name: 'All-Terrain 160t', boom: 230, weight: 88, footprintW: 32, footprintD: 30, pivot: 12 },
+      at220: { name: 'All-Terrain 220t', boom: 250, weight: 96, footprintW: 34, footprintD: 32, pivot: 12 }
+    };
+
+    function applyCranePreset() {
+      const sel = document.getElementById('cranePreset').value;
+      if (sel === 'custom') return;
+      const p = cranePresets[sel];
+      if (!p) return;
+      document.getElementById('maxBoomLength').value = p.boom;
+      document.getElementById('craneWeight').value = p.weight;
+      document.getElementById('footprintW').value = p.footprintW;
+      document.getElementById('footprintD').value = p.footprintD;
+      document.getElementById('pivotHeight').value = p.pivot;
+      update();
+    }
+
+    function loadRealJobScenario() {
+      document.getElementById('cranePreset').value = 'mini5';
+      document.getElementById('maxBoomLength').value = 65;
+      document.getElementById('craneWeight').value = 5;
+      document.getElementById('footprintW').value = 14;
+      document.getElementById('footprintD').value = 12;
+      document.getElementById('pivotHeight').value = 6;
+      document.getElementById('highwayLaneClosure').checked = false;
+      selectedUnitIndex = 4;
+      const unitBounds = getUnitBounds(getInputs());
+      const unit5 = unitBounds[4];
+      const southEdge = parseFloat(document.getElementById('buildingY').value) - parseFloat(document.getElementById('buildingDepth').value);
+      const walkwayW = parseFloat(document.getElementById('walkwayWidth').value);
+      document.getElementById('craneX').value = Math.round(unit5.x + unit5.width / 2);
+      document.getElementById('craneY').value = Math.round(southEdge - walkwayW / 2);
+      renderUnitsGrid();
+      update();
+      alert('Loaded: Mini crane (5-ton, ~65ft boom) positioned in front of Unit 5, on the walkway south of the building.\n\nThis matches the real job: mini crane drove in from Lot 2 (East) across the grass strip.');
+    }
+
+    function loadHighwayScenario() {
+      document.getElementById('cranePreset').value = 'bt23';
+      document.getElementById('maxBoomLength').value = 102;
+      document.getElementById('craneWeight').value = 30;
+      document.getElementById('footprintW').value = 24;
+      document.getElementById('footprintD').value = 20;
+      document.getElementById('pivotHeight').value = 9;
+      document.getElementById('highwayLaneClosure').checked = true;
+      selectedUnitIndex = 4;
+      const unitBounds = getUnitBounds(getInputs());
+      const unit5 = unitBounds[4];
+      const highwayY = parseFloat(document.getElementById('highwayY').value);
+      document.getElementById('craneX').value = Math.round(unit5.x + unit5.width / 2);
+      document.getElementById('craneY').value = Math.round(highwayY - 15);
+      renderUnitsGrid();
+      update();
+      alert('Loaded: ~100ft boom truck on Highway 111 (with lane closure) positioned opposite Unit 5.\n\nBoom must clear: berm (~10ft), property wall (~6ft), walkway obstacles, and reach ~46ft+ horizontally to the AC unit.');
+    }
+
+    function compareScenarios() {
+      const baseInp = getInputs();
+      const unitBounds = getUnitBounds(baseInp);
+      const unit5 = unitBounds[4];
+      const southEdge = baseInp.buildingY - baseInp.buildingDepth;
+      const walkwayW = baseInp.walkwayWidth;
+      const highwayY = baseInp.highwayY;
+
+      // Scenario 1: Mini crane in front of building
+      const scenario1 = {
+        name: 'Mini Crane (Real Job)',
+        craneX: Math.round(unit5.x + unit5.width / 2),
+        craneY: Math.round(southEdge - walkwayW / 2),
+        ...cranePresets.mini5,
+        highwayLaneClosure: false
+      };
+
+      // Scenario 2: Boom truck on highway
+      const scenario2 = {
+        name: 'Boom Truck on Hwy 111',
+        craneX: Math.round(unit5.x + unit5.width / 2),
+        craneY: Math.round(highwayY - 15),
+        ...cranePresets.bt23,
+        highwayLaneClosure: true
+      };
+
+      function evalScenario(s) {
+        const inp = {
+          ...baseInp,
+          maxBoomLength: s.boom,
+          craneWeight: s.weight,
+          footprintW: s.footprintW,
+          footprintD: s.footprintD,
+          pivotHeight: s.pivot,
+          highwayLaneClosure: s.highwayLaneClosure
+        };
+        const result = calculateReach(inp, s.craneX, s.craneY);
+        const footprintIssues = checkFootprintCollisions(inp, s.craneX, s.craneY);
+        return { ...result, footprintIssues, scenario: s };
+      }
+
+      const r1 = evalScenario(scenario1);
+      const r2 = evalScenario(scenario2);
+
+      let msg = '═══════════════════════════════════════\n';
+      msg += '       SCENARIO COMPARISON\n';
+      msg += '═══════════════════════════════════════\n\n';
+
+      function formatScenario(name, r, s) {
+        let txt = `▸ ${name}\n`;
+        txt += `  Crane: ${s.boom}ft boom, ${s.weight}t\n`;
+        txt += `  Position: (${s.craneX}, ${s.craneY})\n`;
+        txt += `  ─────────────────────────\n`;
+        txt += `  Horiz distance: ${r.horizDistance?.toFixed(1) || '—'} ft\n`;
+        txt += `  Boom needed: ${r.boomLength?.toFixed(1) || '—'} ft\n`;
+        txt += `  Boom angle: ${r.boomAngleDeg?.toFixed(1) || '—'}°\n`;
+        txt += `  Limiting factor: ${r.limitingObstruction || '—'}\n`;
+        txt += `  ─────────────────────────\n`;
+        const fits = r.reachable && r.footprintIssues.length === 0;
+        txt += `  FITS: ${fits ? '✓ YES' : '✗ NO'}`;
+        if (!r.reachable) txt += ` (${r.reason || 'boom too short'})`;
+        if (r.footprintIssues.length > 0) txt += ` (footprint: ${r.footprintIssues[0]})`;
+        txt += '\n';
+        if (r.warnings?.length) txt += `  ⚠ ${r.warnings[0]}\n`;
+        if (s.highwayLaneClosure) txt += `  ⚠ Requires highway lane closure\n`;
+        return txt;
+      }
+
+      msg += formatScenario(scenario1.name, r1, scenario1);
+      msg += '\n';
+      msg += formatScenario(scenario2.name, r2, scenario2);
+      msg += '\n═══════════════════════════════════════\n';
+      msg += '⚠ Values are approximate estimates.\n';
+      msg += 'Verify with rental company load charts.\n';
+
+      alert(msg);
+    }
+
+    function showCraneComparison() {
+      const inp = getInputs();
+      const craneX = inp.craneX, craneY = inp.craneY;
+      let results = [];
+      for (const [key, preset] of Object.entries(cranePresets)) {
+        const testInp = { ...inp, maxBoomLength: preset.boom, craneWeight: preset.weight, footprintW: preset.footprintW, footprintD: preset.footprintD, pivotHeight: preset.pivot };
+        const res = calculateReach(testInp, craneX, craneY);
+        const footprintIssues = checkFootprintCollisions(testInp, craneX, craneY);
+        const accessPath = checkAccessPath(testInp, craneX, craneY);
+        results.push({
+          key, name: preset.name, boom: preset.boom, weight: preset.weight,
+          reachable: res.reachable, boomNeeded: res.boomLength,
+          footprintOK: footprintIssues.length === 0,
+          accessOK: accessPath.canAccess,
+          warnings: [...(res.warnings || []), ...footprintIssues, ...(accessPath.warnings || [])]
+        });
+      }
+      results.sort((a, b) => (b.reachable ? 1 : 0) - (a.reachable ? 1 : 0) || a.boomNeeded - b.boomNeeded);
+      let msg = `Crane comparison at position (${craneX}, ${craneY}):\n\n`;
+      msg += results.map(r => {
+        const status = r.reachable ? (r.footprintOK && r.accessOK ? '✓' : '⚠') : '✗';
+        const notes = [];
+        if (!r.reachable) notes.push(`need ${r.boomNeeded?.toFixed(0) || '?'}ft`);
+        if (!r.footprintOK) notes.push('footprint issue');
+        if (!r.accessOK) notes.push('access issue');
+        return `${status} ${r.name}: ${r.boom}ft boom, ${r.weight}t${notes.length ? ' — ' + notes.join(', ') : ''}`;
+      }).join('\n');
+      msg += '\n\n⚠ These are approximate specs. Verify with rental company load charts.';
+      alert(msg);
+    }
+
+    function checkFootprintCollisions(inp, craneX, craneY) {
+      const issues = [];
+      const fw = inp.footprintW || 20, fd = inp.footprintD || 16;
+      const fpMinX = craneX - fw / 2, fpMaxX = craneX + fw / 2;
+      const fpMinY = craneY - fd / 2, fpMaxY = craneY + fd / 2;
+      const southEdge = inp.buildingY - inp.buildingDepth;
+      for (const lp of inp.lampPosts) {
+        const lpX = inp.buildingX + lp.x;
+        const lpY = southEdge - inp.walkwayWidth / 2;
+        if (lpX >= fpMinX && lpX <= fpMaxX && lpY >= fpMinY && lpY <= fpMaxY) {
+          issues.push(`Lamp post at X=${lp.x.toFixed(0)} within footprint`);
+        }
+      }
+      for (const t of inp.walkwayTrees) {
+        const tX = inp.buildingX + t.x;
+        const tY = southEdge - inp.walkwayWidth / 2;
+        if (tX + t.radius >= fpMinX && tX - t.radius <= fpMaxX && tY + t.radius >= fpMinY && tY - t.radius <= fpMaxY) {
+          issues.push(`Walkway tree at X=${t.x.toFixed(0)} overlaps footprint`);
+        }
+      }
+      if (!inp.ignoreWestTree && inp.westTreeHeight > 0) {
+        const wt = { x: inp.westTreeX, y: inp.westTreeY, r: inp.westTreeRadius };
+        if (wt.x + wt.r >= fpMinX && wt.x - wt.r <= fpMaxX && wt.y + wt.r >= fpMinY && wt.y - wt.r <= fpMaxY) {
+          issues.push('West lot tree overlaps footprint');
+        }
+      }
+      for (const t of inp.otherTrees) {
+        if (t.x + t.radius >= fpMinX && t.x - t.radius <= fpMaxX && t.y + t.radius >= fpMinY && t.y - t.radius <= fpMaxY) {
+          issues.push(`Tree at (${t.x},${t.y}) overlaps footprint`);
+        }
+      }
+      if (fpMinY < southEdge - inp.walkwayWidth) {
+        issues.push('Footprint extends past walkway edge');
+      }
+      return issues;
+    }
+
+    function checkAccessPath(inp, craneX, craneY) {
+      const warnings = [];
+      let canAccess = true;
+      const lot2X = inp.clearingX;
+      const grassStartX = inp.grassX;
+      const pathWidth = inp.accessPathWidth || 12;
+      const craneWidth = Math.max(inp.footprintW || 20, 10);
+      if (craneX > grassStartX) {
+        if (craneWidth > pathWidth) {
+          warnings.push(`Crane width (${craneWidth}ft) exceeds access path width (${pathWidth}ft)`);
+        }
+        if (craneX >= grassStartX && craneX < inp.courtsX) {
+          if (inp.craneWeight > inp.grassBearing) {
+            warnings.push(`Weight (${inp.craneWeight}t) exceeds grass bearing (${inp.grassBearing}t) on access route`);
+          } else {
+            warnings.push('Access crosses soft ground (grass strip) — verify bearing');
+          }
+        }
+        if (craneX >= inp.courtsX && craneX < inp.courtsX + inp.courtsWidth) {
+          warnings.push('Cannot access — position is over sunken tennis courts');
+          canAccess = false;
+        }
+      }
+      return { canAccess, warnings };
+    }
+
+    function toggleSection(h) { h.parentElement.classList.toggle('collapsed'); }
+
     function initUnits() {
       units = [];
       for (let i = 0; i < 12; i++) {
-        let stories = 1;
-        if (i === 0 || i === 1 || i === 5 || i === 6 || i === 10 || i === 11) {
-          stories = 2;
-        }
-        units.push({
-          width: DEFAULT_UNIT_WIDTH,
-          stories: stories
-        });
+        units.push({ width: DEFAULT_UNIT_WIDTH, stories: [0,1,5,6,10,11].includes(i) ? 2 : 1 });
       }
     }
-    
-    function applyPreset(preset) {
-      const oneStoryH = parseFloat(document.getElementById('oneStoryHeight').value) || 14;
-      const twoStoryH = parseFloat(document.getElementById('twoStoryHeight').value) || 25;
-      
-      if (preset === 'described') {
-        for (let i = 0; i < 12; i++) {
-          if (i === 0 || i === 1 || i === 5 || i === 6 || i === 10 || i === 11) {
-            units[i].stories = 2;
-          } else {
-            units[i].stories = 1;
-          }
-          units[i].width = DEFAULT_UNIT_WIDTH;
-        }
-      } else if (preset === 'all1') {
-        for (let i = 0; i < 12; i++) {
-          units[i].stories = 1;
-        }
-      } else if (preset === 'all2') {
-        for (let i = 0; i < 12; i++) {
-          units[i].stories = 2;
-        }
+
+    function applyPreset(p) {
+      for (let i = 0; i < 12; i++) {
+        if (p === 'described') units[i].stories = [0,1,5,6,10,11].includes(i) ? 2 : 1;
+        else if (p === 'all1') units[i].stories = 1;
+        else if (p === 'all2') units[i].stories = 2;
+        units[i].width = DEFAULT_UNIT_WIDTH;
       }
-      
-      renderUnitsGrid();
-      update();
+      renderUnitsGrid(); update();
     }
-    
+
     function renderUnitsGrid() {
       const grid = document.getElementById('units-grid');
       grid.innerHTML = '';
-      
-      const oneStoryH = parseFloat(document.getElementById('oneStoryHeight').value) || 14;
-      const twoStoryH = parseFloat(document.getElementById('twoStoryHeight').value) || 25;
-      
+      const oneH = parseFloat(document.getElementById('oneStoryHeight').value) || 14;
+      const twoH = parseFloat(document.getElementById('twoStoryHeight').value) || 25;
       for (let i = 0; i < 12; i++) {
         const cell = document.createElement('div');
-        cell.className = 'unit-cell';
-        if (units[i].stories === 2) cell.classList.add('two-story');
-        if (i === selectedUnitIndex) cell.classList.add('selected');
-        
-        const height = units[i].stories === 2 ? twoStoryH : oneStoryH;
-        cell.innerHTML = `<div class="unit-num">${i + 1}</div><div class="unit-height">${height}ft</div>`;
-        cell.onclick = () => selectUnit(i);
+        cell.className = 'unit-cell' + (units[i].stories === 2 ? ' two-story' : '') + (i === selectedUnitIndex ? ' selected' : '');
+        cell.innerHTML = `<div class="unit-num">${i+1}</div>`;
+        cell.onclick = () => { selectedUnitIndex = i; renderUnitsGrid(); update(); };
         grid.appendChild(cell);
       }
-      
-      updateSelectedUnitControls();
-    }
-    
-    function selectUnit(index) {
-      selectedUnitIndex = index;
-      renderUnitsGrid();
-      update();
-    }
-    
-    function updateSelectedUnitControls() {
-      document.getElementById('selected-unit-label').textContent = `Unit ${selectedUnitIndex + 1} from West`;
+      document.getElementById('selected-unit-label').textContent = `${selectedUnitIndex + 1}`;
       document.getElementById('selectedUnitWidth').value = units[selectedUnitIndex].width;
       document.getElementById('selectedUnitStories').value = units[selectedUnitIndex].stories;
     }
-    
-    function onSelectedUnitChange() {
-      units[selectedUnitIndex].width = parseFloat(document.getElementById('selectedUnitWidth').value) || DEFAULT_UNIT_WIDTH;
-      units[selectedUnitIndex].stories = parseInt(document.getElementById('selectedUnitStories').value);
-      renderUnitsGrid();
-      update();
-    }
-    
-    document.getElementById('selectedUnitWidth').addEventListener('input', onSelectedUnitChange);
-    document.getElementById('selectedUnitStories').addEventListener('change', onSelectedUnitChange);
-    document.getElementById('oneStoryHeight').addEventListener('input', () => { renderUnitsGrid(); update(); });
-    document.getElementById('twoStoryHeight').addEventListener('input', () => { renderUnitsGrid(); update(); });
 
-    const inputIds = [
-      'craneX', 'craneY', 'pivotHeight', 'maxBoomLength', 'safetyMargin',
-      'buildingX', 'buildingY', 'buildingDepth',
-      'unitOffsetX', 'unitOffsetY', 'unitHeight',
-      'treeX', 'treeY', 'treeHeight', 'treeRadius', 'ignoreTree'
-    ];
+    document.getElementById('selectedUnitWidth').addEventListener('input', function() { units[selectedUnitIndex].width = parseFloat(this.value) || DEFAULT_UNIT_WIDTH; renderUnitsGrid(); update(); });
+    document.getElementById('selectedUnitStories').addEventListener('change', function() { units[selectedUnitIndex].stories = parseInt(this.value); renderUnitsGrid(); update(); });
+
+    function renderLampPosts() {
+      const c = document.getElementById('lampPosts-container'); c.innerHTML = '';
+      lampPosts.forEach((lp, i) => {
+        c.innerHTML += `<div class="obstacle-row"><div class="input-wrapper"><label>X</label><input type="number" value="${lp.x}" onchange="lampPosts[${i}].x=parseFloat(this.value);update()"></div><div class="input-wrapper"><label>Ht</label><input type="number" value="${lp.height}" onchange="lampPosts[${i}].height=parseFloat(this.value);update()"></div><div></div><div></div><button class="remove-btn" onclick="lampPosts.splice(${i},1);renderLampPosts();update()">×</button></div>`;
+      });
+    }
+    function addLampPost() { lampPosts.push({ x: Math.random() * 200, height: 15 }); renderLampPosts(); update(); }
+
+    function renderWalkwayTrees() {
+      const c = document.getElementById('walkwayTrees-container'); c.innerHTML = '';
+      walkwayTrees.forEach((t, i) => {
+        c.innerHTML += `<div class="obstacle-row"><div class="input-wrapper"><label>X</label><input type="number" value="${t.x}" onchange="walkwayTrees[${i}].x=parseFloat(this.value);update()"></div><div class="input-wrapper"><label>Ht</label><input type="number" value="${t.height}" onchange="walkwayTrees[${i}].height=parseFloat(this.value);update()"></div><div class="input-wrapper"><label>R</label><input type="number" value="${t.radius}" onchange="walkwayTrees[${i}].radius=parseFloat(this.value);update()"></div><div></div><button class="remove-btn" onclick="walkwayTrees.splice(${i},1);renderWalkwayTrees();update()">×</button></div>`;
+      });
+    }
+    function addWalkwayTree() { walkwayTrees.push({ x: Math.random() * 200, height: 18, radius: 5 }); renderWalkwayTrees(); update(); }
+
+    function renderOtherTrees() {
+      const c = document.getElementById('trees-container'); c.innerHTML = '';
+      otherTrees.forEach((t, i) => {
+        c.innerHTML += `<div class="obstacle-row"><div class="input-wrapper"><label>X</label><input type="number" value="${t.x}" onchange="otherTrees[${i}].x=parseFloat(this.value);update()"></div><div class="input-wrapper"><label>Y</label><input type="number" value="${t.y}" onchange="otherTrees[${i}].y=parseFloat(this.value);update()"></div><div class="input-wrapper"><label>Ht</label><input type="number" value="${t.height}" onchange="otherTrees[${i}].height=parseFloat(this.value);update()"></div><div class="input-wrapper"><label>R</label><input type="number" value="${t.radius}" onchange="otherTrees[${i}].radius=parseFloat(this.value);update()"></div><button class="remove-btn" onclick="otherTrees.splice(${i},1);renderOtherTrees();update()">×</button></div>`;
+      });
+    }
+    function addTree() { otherTrees.push({ x: 0, y: 50, height: 30, radius: 6 }); renderOtherTrees(); update(); }
+
+    const inputIds = ['craneX','craneY','pivotHeight','maxBoomLength','safetyMargin','craneWeight','footprintW','footprintD',
+      'westLotX','westLotWidth','westLotY','westLotDepth','grassX','grassWidth','grassBearing','courtsX','courtsWidth','courtsDrop','clearingX','accessPathWidth',
+      'buildingX','buildingY','buildingDepth','oneStoryHeight','twoStoryHeight','unitOffsetX','unitOffsetY','unitHeight',
+      'walkwayWidth','wallY','wallHeight','wallThickness','bermY','bermWidth','bermHeight','highwayY','highwayLaneClosure',
+      'westTreeX','westTreeY','westTreeHeight','westTreeRadius','ignoreWestTree'];
 
     function getInputs() {
-      const inputs = {};
-      
+      const inp = {};
       for (const id of inputIds) {
-        if (id === 'ignoreTree') {
-          inputs[id] = document.getElementById(id).checked;
-        } else {
-          inputs[id] = parseFloat(document.getElementById(id).value) || 0;
-        }
+        const el = document.getElementById(id);
+        if (!el) continue;
+        if (el.type === 'checkbox') inp[id] = el.checked;
+        else inp[id] = parseFloat(el.value) || 0;
       }
-      
-      inputs.oneStoryHeight = parseFloat(document.getElementById('oneStoryHeight').value) || 14;
-      inputs.twoStoryHeight = parseFloat(document.getElementById('twoStoryHeight').value) || 25;
-      inputs.units = units;
-      inputs.selectedUnitIndex = selectedUnitIndex;
-      
-      return inputs;
-    }
-    
-    function getUnitBounds(inputs) {
-      const bounds = [];
-      let xPos = inputs.buildingX;
-      
-      for (let i = 0; i < inputs.units.length; i++) {
-        const unit = inputs.units[i];
-        const height = unit.stories === 2 ? inputs.twoStoryHeight : inputs.oneStoryHeight;
-        
-        bounds.push({
-          index: i,
-          x: xPos,
-          y: inputs.buildingY,
-          width: unit.width,
-          depth: inputs.buildingDepth,
-          height: height,
-          stories: unit.stories
-        });
-        
-        xPos += unit.width;
-      }
-      
-      return bounds;
-    }
-    
-    function getACPosition(inputs) {
-      const bounds = getUnitBounds(inputs);
-      const selectedUnit = bounds[inputs.selectedUnitIndex];
-      
-      return {
-        x: selectedUnit.x + inputs.unitOffsetX,
-        y: selectedUnit.y + inputs.unitOffsetY,
-        z: selectedUnit.height + inputs.unitHeight,
-        roofHeight: selectedUnit.height
-      };
+      inp.units = units; inp.selectedUnitIndex = selectedUnitIndex;
+      inp.lampPosts = lampPosts; inp.walkwayTrees = walkwayTrees; inp.otherTrees = otherTrees;
+      return inp;
     }
 
-    function calculateReach(inputs, craneX, craneY) {
-      const {
-        pivotHeight, maxBoomLength, safetyMargin,
-        treeX, treeY, treeHeight, treeRadius, ignoreTree
-      } = inputs;
-      
-      const acPos = getACPosition(inputs);
-      const unitBounds = getUnitBounds(inputs);
-      
-      const targetX = acPos.x;
-      const targetY = acPos.y;
-      const targetZ = acPos.z;
-      
-      const dx = targetX - craneX;
-      const dy = targetY - craneY;
-      const horizDistance = Math.sqrt(dx * dx + dy * dy);
-      
-      if (horizDistance < 0.1) {
-        return { reachable: false, reason: 'Crane too close to target' };
+    function getUnitBounds(inp) {
+      const bounds = []; let xPos = inp.buildingX;
+      const southEdge = inp.buildingY - inp.buildingDepth;
+      for (let i = 0; i < inp.units.length; i++) {
+        const u = inp.units[i];
+        bounds.push({ index: i, x: xPos, yNorth: inp.buildingY, ySouth: southEdge, width: u.width, depth: inp.buildingDepth, height: u.stories === 2 ? inp.twoStoryHeight : inp.oneStoryHeight, stories: u.stories });
+        xPos += u.width;
       }
-      
-      const dirX = dx / horizDistance;
-      const dirY = dy / horizDistance;
-      
-      let requiredTipHeight = targetZ + safetyMargin;
-      let limitingObstruction = 'target';
+      return bounds;
+    }
+
+    function getACPosition(inp) {
+      const bounds = getUnitBounds(inp);
+      const u = bounds[inp.selectedUnitIndex];
+      return { x: u.x + inp.unitOffsetX, y: u.yNorth - inp.unitOffsetY, z: u.height + inp.unitHeight, roofHeight: u.height };
+    }
+
+    function getZoneAt(inp, x, y) {
+      const bounds = getUnitBounds(inp);
+      const buildingLen = bounds.reduce((m, b) => Math.max(m, b.x + b.width), 0);
+      const southEdge = inp.buildingY - inp.buildingDepth;
+      for (const b of bounds) { if (x >= b.x && x <= b.x + b.width && y <= b.yNorth && y >= b.ySouth) return { zone: 'building', color: 'building' }; }
+      if (x >= inp.buildingX && x <= buildingLen && y < southEdge && y >= southEdge - inp.walkwayWidth) return { zone: 'walkway', color: 'caution' };
+      if (y <= inp.wallY && y >= inp.wallY - inp.wallThickness) return { zone: 'wall', color: 'nogo' };
+      if (y <= inp.bermY && y >= inp.bermY - inp.bermWidth) return { zone: 'berm', color: 'nogo' };
+      if (y <= inp.highwayY) {
+        if (inp.highwayLaneClosure && y >= inp.highwayY - 30) {
+          return { zone: 'highway-closed', color: 'caution', note: 'Lane closure required' };
+        }
+        return { zone: 'highway', color: 'nogo' };
+      }
+      if (x >= inp.westLotX && x <= inp.westLotX + inp.westLotWidth && y >= inp.westLotY && y <= inp.westLotY + inp.westLotDepth) return { zone: 'lot', color: 'preferred' };
+      if (x >= inp.grassX && x < inp.courtsX) return { zone: 'grass', color: 'caution', weightLimit: inp.grassBearing };
+      if (x >= inp.courtsX && x < inp.courtsX + inp.courtsWidth) return { zone: 'courts', color: 'nogo', drop: inp.courtsDrop };
+      if (x >= inp.clearingX) return { zone: 'lot2', color: 'ok' };
+      return { zone: 'open', color: 'ok' };
+    }
+
+    function calculateReach(inp, craneX, craneY) {
+      const { pivotHeight, maxBoomLength, safetyMargin, craneWeight, walkwayWidth, wallY, wallHeight, bermY, bermWidth, bermHeight, westTreeX, westTreeY, westTreeHeight, westTreeRadius, ignoreWestTree } = inp;
+      const zoneInfo = getZoneAt(inp, craneX, craneY);
+      const warnings = [];
+      if (zoneInfo.color === 'nogo') return { reachable: false, reason: `Crane in ${zoneInfo.zone} (no-go zone)`, boomLength: 0, horizDistance: 0, zone: zoneInfo };
+      if (zoneInfo.zone === 'grass' && craneWeight > zoneInfo.weightLimit) warnings.push(`Weight (${craneWeight}t) exceeds grass bearing limit (${zoneInfo.weightLimit}t) — soft ground risk`);
+      if (zoneInfo.zone === 'grass') warnings.push('Soft ground zone — verify bearing capacity');
+
+      const acPos = getACPosition(inp);
+      const unitBounds = getUnitBounds(inp);
+      const southEdge = inp.buildingY - inp.buildingDepth;
+      const buildingLen = unitBounds.reduce((m, b) => Math.max(m, b.x + b.width), 0);
+      const dx = acPos.x - craneX, dy = acPos.y - craneY;
+      const horizDistance = Math.sqrt(dx * dx + dy * dy);
+      if (horizDistance < 0.1) return { reachable: false, reason: 'Too close', boomLength: 0, horizDistance: 0, zone: zoneInfo };
+      const dirX = dx / horizDistance, dirY = dy / horizDistance;
+
+      let requiredTipHeight = acPos.z + safetyMargin, limitingObstruction = 'target';
       const clearanceChecks = [];
-      
+
+      function checkObs(name, ox, oy, oh, or = 0) {
+        const toO = { x: ox - craneX, y: oy - craneY };
+        const projLen = toO.x * dirX + toO.y * dirY;
+        if (projLen > 0 && projLen < horizDistance) {
+          const perpDist = Math.sqrt((toO.x - projLen * dirX) ** 2 + (toO.y - projLen * dirY) ** 2);
+          if (perpDist < or + 3) {
+            const needed = oh + safetyMargin;
+            const angle = Math.atan2(needed - pivotHeight, projLen);
+            const projTip = pivotHeight + horizDistance * Math.tan(angle);
+            if (projTip > requiredTipHeight) { requiredTipHeight = projTip; limitingObstruction = name; }
+            clearanceChecks.push({ name, height: oh, distance: projLen.toFixed(1) });
+          }
+        }
+      }
+
       for (const unit of unitBounds) {
-        const corners = [
-          { x: unit.x, y: unit.y },
-          { x: unit.x + unit.width, y: unit.y },
-          { x: unit.x + unit.width, y: unit.y + unit.depth },
-          { x: unit.x, y: unit.y + unit.depth }
-        ];
-        
+        const corners = [{ x: unit.x, y: unit.yNorth }, { x: unit.x + unit.width, y: unit.yNorth }, { x: unit.x + unit.width, y: unit.ySouth }, { x: unit.x, y: unit.ySouth }];
         for (let i = 0; i < 4; i++) {
-          const p1 = corners[i];
-          const p2 = corners[(i + 1) % 4];
-          
-          const edgeDx = p2.x - p1.x;
-          const edgeDy = p2.y - p1.y;
-          
+          const p1 = corners[i], p2 = corners[(i + 1) % 4];
+          const edgeDx = p2.x - p1.x, edgeDy = p2.y - p1.y;
           const denom = dirX * edgeDy - dirY * edgeDx;
           if (Math.abs(denom) < 0.0001) continue;
-          
           const t = ((p1.x - craneX) * edgeDy - (p1.y - craneY) * edgeDx) / denom;
           const u = ((p1.x - craneX) * dirY - (p1.y - craneY) * dirX) / denom;
-          
           if (t > 0.1 && t < horizDistance - 0.1 && u >= 0 && u <= 1) {
-            const neededHeight = unit.height + safetyMargin;
-            const angleToEdge = Math.atan2(neededHeight - pivotHeight, t);
-            const projectedTip = pivotHeight + horizDistance * Math.tan(angleToEdge);
-            
-            if (projectedTip > requiredTipHeight) {
-              requiredTipHeight = projectedTip;
-              limitingObstruction = `Unit ${unit.index + 1} roof (${unit.height}ft)`;
-              
-              clearanceChecks.push({
-                name: `Unit ${unit.index + 1}`,
-                required: neededHeight,
-                distance: t.toFixed(1),
-                height: unit.height
-              });
-            }
+            const needed = unit.height + safetyMargin;
+            const angle = Math.atan2(needed - pivotHeight, t);
+            const projTip = pivotHeight + horizDistance * Math.tan(angle);
+            if (projTip > requiredTipHeight) { requiredTipHeight = projTip; limitingObstruction = `Unit ${unit.index + 1} (${unit.height}ft)`; }
+            clearanceChecks.push({ name: `Unit ${unit.index + 1}`, height: unit.height, distance: t.toFixed(1) });
           }
         }
       }
-      
-      if (!ignoreTree && treeHeight > 0) {
-        const toTree = { x: treeX - craneX, y: treeY - craneY };
-        const projLen = toTree.x * dirX + toTree.y * dirY;
-        
-        if (projLen > 0 && projLen < horizDistance) {
-          const perpX = toTree.x - projLen * dirX;
-          const perpY = toTree.y - projLen * dirY;
-          const perpDist = Math.sqrt(perpX * perpX + perpY * perpY);
-          
-          if (perpDist < treeRadius + 3) {
-            const treeClearanceHeight = treeHeight + safetyMargin;
-            const angleToTree = Math.atan2(treeClearanceHeight - pivotHeight, projLen);
-            const projectedTip = pivotHeight + horizDistance * Math.tan(angleToTree);
-            
-            if (projectedTip > requiredTipHeight) {
-              requiredTipHeight = projectedTip;
-              limitingObstruction = 'tree';
-            }
-            
-            clearanceChecks.push({
-              name: 'Tree',
-              required: treeClearanceHeight,
-              distance: projLen.toFixed(1),
-              height: treeHeight
-            });
-          }
-        }
-      }
-      
+
+      if (!ignoreWestTree && westTreeHeight > 0) checkObs('West lot tree', westTreeX, westTreeY, westTreeHeight, westTreeRadius);
+      for (const lp of inp.lampPosts) checkObs(`Lamp @${lp.x.toFixed(0)}`, inp.buildingX + lp.x, southEdge - walkwayWidth / 2, lp.height, 1);
+      for (const t of inp.walkwayTrees) checkObs(`WalkTree @${t.x.toFixed(0)}`, inp.buildingX + t.x, southEdge - walkwayWidth / 2, t.height, t.radius);
+      if (wallHeight > 0) for (let wx = inp.buildingX; wx < buildingLen; wx += 20) checkObs('Wall', wx, wallY - inp.wallThickness / 2, wallHeight, 1);
+      if (bermHeight > 0) for (let bx = inp.buildingX - 20; bx < buildingLen + 20; bx += 15) checkObs('Berm', bx, bermY - bermWidth / 2, bermHeight, bermWidth / 2);
+      for (const t of inp.otherTrees) checkObs(`Tree @(${t.x},${t.y})`, t.x, t.y, t.height, t.radius);
+
       const boomAngleRad = Math.atan2(requiredTipHeight - pivotHeight, horizDistance);
       const boomAngleDeg = boomAngleRad * 180 / Math.PI;
       const boomLength = horizDistance / Math.cos(boomAngleRad);
-      
-      const isReachable = boomLength <= maxBoomLength && boomLength > 0 && 
-                          boomAngleDeg > 0 && boomAngleDeg < 85;
-      
-      return {
-        reachable: isReachable,
-        boomLength,
-        boomAngleDeg,
-        boomAngleRad,
-        horizDistance,
-        tipHeight: requiredTipHeight,
-        targetZ,
-        acRoofHeight: acPos.roofHeight,
-        limitingObstruction,
-        clearanceChecks,
-        reason: !isReachable ? 
-          (boomLength > maxBoomLength ? `Boom too short (need ${boomLength.toFixed(0)} ft)` : 'Invalid angle') : null
-      };
+      const isReachable = boomLength <= maxBoomLength && boomLength > 0 && boomAngleDeg > 0 && boomAngleDeg < 85;
+
+      const footprintIssues = checkFootprintCollisions(inp, craneX, craneY);
+      if (footprintIssues.length > 0) warnings.push(...footprintIssues.map(i => `Footprint: ${i}`));
+      if (zoneInfo.zone === 'highway-closed') warnings.push('Requires highway lane closure permit');
+      return { reachable: isReachable, boomLength, boomAngleDeg, boomAngleRad, horizDistance, tipHeight: requiredTipHeight, acPos, limitingObstruction, clearanceChecks, warnings, zone: zoneInfo, footprintIssues, reason: !isReachable ? (boomLength > maxBoomLength ? `Need ${boomLength.toFixed(0)}ft` : 'Invalid angle') : null };
     }
 
-    function generateReachabilityMap(inputs) {
-      const unitBounds = getUnitBounds(inputs);
-      const acPos = getACPosition(inputs);
-      
-      const gridSize = 8;
-      const margin = 60;
-      
-      let minX = inputs.buildingX - margin;
-      let maxX = inputs.buildingX;
-      let minY = inputs.buildingY - margin;
-      let maxY = inputs.buildingY + inputs.buildingDepth + margin;
-      
-      for (const unit of unitBounds) {
-        maxX = Math.max(maxX, unit.x + unit.width);
-      }
-      maxX += margin;
-      
-      const points = [];
-      const colors = [];
-      
+    function generateReachabilityMap(inp) {
+      const unitBounds = getUnitBounds(inp);
+      const buildingLen = unitBounds.reduce((m, b) => Math.max(m, b.x + b.width), 0);
+      const gridSize = 12;
+      const minX = inp.westLotX - 20, maxX = inp.clearingX + 60;
+      const minY = inp.highwayY - 10, maxY = inp.buildingY + 40;
+      const points = [], colors = [];
+
       for (let x = minX; x <= maxX; x += gridSize) {
         for (let y = minY; y <= maxY; y += gridSize) {
-          let insideBuilding = false;
-          for (const unit of unitBounds) {
-            if (x >= unit.x && x <= unit.x + unit.width &&
-                y >= unit.y && y <= unit.y + unit.depth) {
-              insideBuilding = true;
-              break;
-            }
-          }
-          if (insideBuilding) continue;
-          
-          const result = calculateReach(inputs, x, y);
-          
+          const zone = getZoneAt(inp, x, y);
           points.push(x, -0.1, y);
-          
-          if (result.reachable) {
-            const ratio = result.boomLength / inputs.maxBoomLength;
-            const g = 0.85 - ratio * 0.5;
-            colors.push(0.2, g, 0.3, 0.5);
+          if (zone.color === 'nogo' || zone.color === 'building') {
+            if (zone.zone === 'highway') colors.push(0.15, 0.15, 0.15, 0.9);
+            else if (zone.zone === 'courts') colors.push(0.4, 0.25, 0.15, 0.7);
+            else if (zone.zone === 'building') colors.push(0.1, 0.3, 0.1, 0.3);
+            else colors.push(0.35, 0.18, 0.18, 0.5);
+          } else if (zone.color === 'preferred') {
+            const result = calculateReach(inp, x, y);
+            if (result.reachable) colors.push(0.15, 0.5, 0.15, 0.6);
+            else colors.push(0.3, 0.4, 0.2, 0.4);
+          } else if (zone.color === 'caution') {
+            const result = calculateReach(inp, x, y);
+            if (result.reachable) colors.push(0.5, 0.5, 0.15, 0.5);
+            else colors.push(0.4, 0.35, 0.15, 0.4);
           } else {
-            colors.push(0.35, 0.12, 0.12, 0.25);
+            const result = calculateReach(inp, x, y);
+            if (result.reachable) { const r = result.boomLength / inp.maxBoomLength; colors.push(0.2, 0.7 - r * 0.4, 0.3, 0.4); }
+            else colors.push(0.35, 0.15, 0.15, 0.25);
           }
         }
       }
-      
       return { points, colors, gridSize };
     }
 
     function init3D() {
       const canvas = document.getElementById('canvas-3d');
       const container = canvas.parentElement;
-      
       scene = new THREE.Scene();
       scene.background = new THREE.Color(0x1a1a1a);
-      
-      const width = container.clientWidth - 24;
-      const height = Math.max(450, container.clientHeight - 60);
-      
+      const width = container.clientWidth - 16, height = Math.max(400, container.clientHeight - 40);
       camera = new THREE.PerspectiveCamera(50, width / height, 1, 2000);
-      camera.position.set(-80, 120, 100);
-      camera.lookAt(100, 0, 40);
-      
+      camera.position.set(-100, 150, -60);
+      camera.lookAt(100, 0, 0);
       renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
       renderer.setSize(width, height);
       renderer.setPixelRatio(window.devicePixelRatio);
-      
       controls = new THREE.OrbitControls(camera, renderer.domElement);
-      controls.target.set(120, 0, 40);
+      controls.target.set(100, 0, 0);
       controls.enableDamping = true;
-      controls.dampingFactor = 0.1;
       controls.maxPolarAngle = Math.PI / 2 - 0.05;
-      
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-      scene.add(ambientLight);
-      
+      scene.add(new THREE.AmbientLight(0xffffff, 0.6));
       const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-      dirLight.position.set(100, 200, 100);
+      dirLight.position.set(100, 200, -50);
       scene.add(dirLight);
-      
-      const gridHelper = new THREE.GridHelper(500, 50, 0x444444, 0x333333);
-      scene.add(gridHelper);
-      
-      // Compass indicator - West marker
-      const westMarkerGeo = new THREE.ConeGeometry(4, 12, 8);
-      const westMarkerMat = new THREE.MeshLambertMaterial({ color: 0xf97316 });
-      const westMarker = new THREE.Mesh(westMarkerGeo, westMarkerMat);
-      westMarker.position.set(-25, 6, 40);
+      scene.add(new THREE.GridHelper(700, 70, 0x444444, 0x333333));
+      groundPlane = new THREE.Mesh(new THREE.PlaneGeometry(700, 500), new THREE.MeshBasicMaterial({ visible: false }));
+      groundPlane.rotation.x = -Math.PI / 2;
+      scene.add(groundPlane);
+      const westMarker = new THREE.Mesh(new THREE.ConeGeometry(4, 12, 8), new THREE.MeshLambertMaterial({ color: 0xf97316 }));
+      westMarker.position.set(-30, 6, 20);
       westMarker.rotation.z = Math.PI / 2;
       scene.add(westMarker);
-      
-      // West label pole
-      const westPoleGeo = new THREE.CylinderGeometry(0.5, 0.5, 20, 8);
-      const westPole = new THREE.Mesh(westPoleGeo, westMarkerMat);
-      westPole.position.set(-25, 10, 40);
-      scene.add(westPole);
-      
-      const planeGeo = new THREE.PlaneGeometry(500, 500);
-      const planeMat = new THREE.MeshBasicMaterial({ visible: false });
-      groundPlane = new THREE.Mesh(planeGeo, planeMat);
-      groundPlane.rotation.x = -Math.PI / 2;
-      groundPlane.position.y = 0;
-      scene.add(groundPlane);
-      
       raycaster = new THREE.Raycaster();
       mouse = new THREE.Vector2();
-      
       canvas.addEventListener('mousedown', onMouseDown);
       canvas.addEventListener('mousemove', onMouseMove);
       canvas.addEventListener('mouseup', onMouseUp);
-      
       window.addEventListener('resize', onWindowResize);
-      
       animate();
     }
 
-    function onMouseDown(event) {
-      const canvas = renderer.domElement;
-      const rect = canvas.getBoundingClientRect();
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-      
+    function onMouseDown(e) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
       raycaster.setFromCamera(mouse, camera);
-      
-      if (craneMesh) {
-        const intersects = raycaster.intersectObject(craneMesh, true);
-        if (intersects.length > 0) {
-          isDraggingCrane = true;
-          controls.enabled = false;
-        }
-      }
+      if (craneMesh && raycaster.intersectObject(craneMesh, true).length > 0) { isDraggingCrane = true; controls.enabled = false; }
     }
-
-    function onMouseMove(event) {
+    function onMouseMove(e) {
       if (!isDraggingCrane) return;
-      
-      const canvas = renderer.domElement;
-      const rect = canvas.getBoundingClientRect();
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-      
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
       raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObject(groundPlane);
-      
-      if (intersects.length > 0) {
-        const point = intersects[0].point;
-        document.getElementById('craneX').value = Math.round(point.x);
-        document.getElementById('craneY').value = Math.round(point.z);
-        update();
-      }
+      const hits = raycaster.intersectObject(groundPlane);
+      if (hits.length > 0) { document.getElementById('craneX').value = Math.round(hits[0].point.x); document.getElementById('craneY').value = Math.round(hits[0].point.z); update(); }
     }
-
-    function onMouseUp() {
-      isDraggingCrane = false;
-      controls.enabled = true;
-    }
-
+    function onMouseUp() { isDraggingCrane = false; controls.enabled = true; }
     function onWindowResize() {
       const container = document.getElementById('canvas-3d').parentElement;
-      const width = container.clientWidth - 24;
-      const height = Math.max(450, container.clientHeight - 60);
-      
-      camera.aspect = width / height;
+      const w = container.clientWidth - 16, h = Math.max(400, container.clientHeight - 40);
+      camera.aspect = w / h;
       camera.updateProjectionMatrix();
-      renderer.setSize(width, height);
+      renderer.setSize(w, h);
     }
+    function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
 
-    function animate() {
-      requestAnimationFrame(animate);
-      controls.update();
-      renderer.render(scene, camera);
-    }
+    function update3DScene(inp, result) {
+      while (scene.children.length > 5) scene.remove(scene.children[scene.children.length - 1]);
+      const { craneX, craneY, pivotHeight, walkwayWidth, wallY, wallHeight, wallThickness, bermY, bermWidth, bermHeight, highwayY, westLotX, westLotWidth, westLotY, westLotDepth, grassX, grassWidth, courtsX, courtsWidth, courtsDrop, clearingX, westTreeX, westTreeY, westTreeHeight, westTreeRadius, ignoreWestTree } = inp;
+      const unitBounds = getUnitBounds(inp);
+      const acPos = result.acPos || getACPosition(inp);
+      const southEdge = inp.buildingY - inp.buildingDepth;
+      const buildingLen = unitBounds.reduce((m, b) => Math.max(m, b.x + b.width), 0);
 
-    function update3DScene(inputs, result) {
-      while (scene.children.length > 4) {
-        scene.remove(scene.children[scene.children.length - 1]);
-      }
-      
-      const {
-        craneX, craneY, pivotHeight,
-        treeX, treeY, treeHeight, treeRadius, ignoreTree
-      } = inputs;
-      
-      const unitBounds = getUnitBounds(inputs);
-      const acPos = getACPosition(inputs);
-      
-      for (const unit of unitBounds) {
-        const color = unit.stories === 2 ? 0x16a34a : 0x22c55e;
-        const geo = new THREE.BoxGeometry(unit.width, unit.height, unit.depth);
-        const mat = new THREE.MeshLambertMaterial({ 
-          color: color, 
-          transparent: true, 
-          opacity: 0.75 
-        });
-        const mesh = new THREE.Mesh(geo, mat);
-        mesh.position.set(
-          unit.x + unit.width / 2,
-          unit.height / 2,
-          unit.y + unit.depth / 2
-        );
+      // Building units
+      for (const u of unitBounds) {
+        const color = u.stories === 2 ? 0x16a34a : 0x22c55e;
+        const mesh = new THREE.Mesh(new THREE.BoxGeometry(u.width, u.height, u.depth), new THREE.MeshLambertMaterial({ color, transparent: true, opacity: 0.75 }));
+        mesh.position.set(u.x + u.width / 2, u.height / 2, (u.yNorth + u.ySouth) / 2);
         scene.add(mesh);
-        
-        const edgesGeo = new THREE.EdgesGeometry(geo);
-        const edgeColor = unit.index === inputs.selectedUnitIndex ? 0xf97316 : 0x15803d;
-        const edgesMat = new THREE.LineBasicMaterial({ color: edgeColor });
-        const edges = new THREE.LineSegments(edgesGeo, edgesMat);
+        const edges = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(u.width, u.height, u.depth)), new THREE.LineBasicMaterial({ color: u.index === inp.selectedUnitIndex ? 0xf97316 : 0x15803d }));
         edges.position.copy(mesh.position);
         scene.add(edges);
       }
-      
-      const unitGeo = new THREE.BoxGeometry(5, inputs.unitHeight, 4);
-      const unitMat = new THREE.MeshLambertMaterial({ color: 0xf97316 });
-      const unitMesh = new THREE.Mesh(unitGeo, unitMat);
-      unitMesh.position.set(acPos.x, acPos.roofHeight + inputs.unitHeight / 2, acPos.y);
-      scene.add(unitMesh);
-      
-      if (!ignoreTree && treeHeight > 0) {
-        const trunkGeo = new THREE.CylinderGeometry(1, 1.5, treeHeight * 0.7, 8);
-        const trunkMat = new THREE.MeshLambertMaterial({ color: 0x8b4513 });
-        const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-        trunk.position.set(treeX, treeHeight * 0.35, treeY);
+
+      // AC Unit
+      const acMesh = new THREE.Mesh(new THREE.BoxGeometry(5, inp.unitHeight, 4), new THREE.MeshLambertMaterial({ color: 0xf97316 }));
+      acMesh.position.set(acPos.x, acPos.roofHeight + inp.unitHeight / 2, acPos.y);
+      scene.add(acMesh);
+
+      // West parking lot
+      const lotMesh = new THREE.Mesh(new THREE.PlaneGeometry(westLotWidth, westLotDepth), new THREE.MeshLambertMaterial({ color: 0x3a3a3a }));
+      lotMesh.rotation.x = -Math.PI / 2;
+      lotMesh.position.set(westLotX + westLotWidth / 2, 0.05, westLotY + westLotDepth / 2);
+      scene.add(lotMesh);
+
+      // West lot tree
+      if (!ignoreWestTree && westTreeHeight > 0) {
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.8, westTreeHeight * 0.6, 8), new THREE.MeshLambertMaterial({ color: 0x8b4513 }));
+        trunk.position.set(westTreeX, westTreeHeight * 0.3, westTreeY);
         scene.add(trunk);
-        
-        const canopyGeo = new THREE.SphereGeometry(treeRadius, 16, 12);
-        const canopyMat = new THREE.MeshLambertMaterial({ color: 0x228b22 });
-        const canopy = new THREE.Mesh(canopyGeo, canopyMat);
-        canopy.position.set(treeX, treeHeight - treeRadius * 0.3, treeY);
+        const canopy = new THREE.Mesh(new THREE.SphereGeometry(westTreeRadius, 12, 10), new THREE.MeshLambertMaterial({ color: 0x228b22 }));
+        canopy.position.set(westTreeX, westTreeHeight - westTreeRadius * 0.3, westTreeY);
         scene.add(canopy);
       }
+
+      // Grass strip
+      const grassMesh = new THREE.Mesh(new THREE.PlaneGeometry(grassWidth, 100), new THREE.MeshLambertMaterial({ color: 0x4a7a3a }));
+      grassMesh.rotation.x = -Math.PI / 2;
+      grassMesh.position.set(grassX + grassWidth / 2, 0.05, 0);
+      scene.add(grassMesh);
+
+      // Sunken tennis courts
+      const courtsMesh = new THREE.Mesh(new THREE.BoxGeometry(courtsWidth, courtsDrop, 80), new THREE.MeshLambertMaterial({ color: 0x654321 }));
+      courtsMesh.position.set(courtsX + courtsWidth / 2, -courtsDrop / 2, 0);
+      scene.add(courtsMesh);
+      const courtSurface = new THREE.Mesh(new THREE.PlaneGeometry(courtsWidth, 80), new THREE.MeshLambertMaterial({ color: 0x2d5a4a }));
+      courtSurface.rotation.x = -Math.PI / 2;
+      courtSurface.position.set(courtsX + courtsWidth / 2, -courtsDrop + 0.1, 0);
+      scene.add(courtSurface);
+
+      // East clearing
+      const clearingMesh = new THREE.Mesh(new THREE.PlaneGeometry(60, 100), new THREE.MeshLambertMaterial({ color: 0x3a5a3a }));
+      clearingMesh.rotation.x = -Math.PI / 2;
+      clearingMesh.position.set(clearingX + 30, 0.05, 0);
+      scene.add(clearingMesh);
+
+      // Walkway
+      const walkMesh = new THREE.Mesh(new THREE.PlaneGeometry(buildingLen, walkwayWidth), new THREE.MeshLambertMaterial({ color: 0x555555, transparent: true, opacity: 0.5 }));
+      walkMesh.rotation.x = -Math.PI / 2;
+      walkMesh.position.set(inp.buildingX + buildingLen / 2, 0.1, southEdge - walkwayWidth / 2);
+      scene.add(walkMesh);
+
+      // Lamp posts
+      for (const lp of inp.lampPosts) {
+        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, lp.height, 8), new THREE.MeshLambertMaterial({ color: 0x666666 }));
+        pole.position.set(inp.buildingX + lp.x, lp.height / 2, southEdge - walkwayWidth / 2);
+        scene.add(pole);
+        const lamp = new THREE.Mesh(new THREE.SphereGeometry(1.5, 8, 6), new THREE.MeshLambertMaterial({ color: 0xfbbf24 }));
+        lamp.position.set(inp.buildingX + lp.x, lp.height, southEdge - walkwayWidth / 2);
+        scene.add(lamp);
+      }
+
+      // Walkway trees
+      for (const t of inp.walkwayTrees) {
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 1, t.height * 0.6, 8), new THREE.MeshLambertMaterial({ color: 0x8b4513 }));
+        trunk.position.set(inp.buildingX + t.x, t.height * 0.3, southEdge - walkwayWidth / 2);
+        scene.add(trunk);
+        const canopy = new THREE.Mesh(new THREE.SphereGeometry(t.radius, 12, 10), new THREE.MeshLambertMaterial({ color: 0x228b22 }));
+        canopy.position.set(inp.buildingX + t.x, t.height - t.radius * 0.3, southEdge - walkwayWidth / 2);
+        scene.add(canopy);
+      }
+
+      // Wall
+      if (wallHeight > 0) {
+        const wallMesh = new THREE.Mesh(new THREE.BoxGeometry(buildingLen + 40, wallHeight, wallThickness), new THREE.MeshLambertMaterial({ color: 0x8b7355 }));
+        wallMesh.position.set(inp.buildingX + buildingLen / 2, wallHeight / 2, wallY - wallThickness / 2);
+        scene.add(wallMesh);
+      }
+
+      // Berm
+      if (bermHeight > 0) {
+        const bermShape = new THREE.Shape();
+        bermShape.moveTo(-bermWidth / 2, 0);
+        bermShape.lineTo(bermWidth / 2, 0);
+        bermShape.lineTo(bermWidth / 4, bermHeight);
+        bermShape.lineTo(-bermWidth / 4, bermHeight);
+        bermShape.closePath();
+        const bermMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(bermShape, { depth: buildingLen + 80, bevelEnabled: false }), new THREE.MeshLambertMaterial({ color: 0x6b8e23 }));
+        bermMesh.rotation.y = Math.PI / 2;
+        bermMesh.position.set(inp.buildingX - 40, 0, bermY - bermWidth / 2);
+        scene.add(bermMesh);
+      }
+
+      // Highway
+      const hwColor = inp.highwayLaneClosure ? 0x3a3a2a : 0x222222;
+      const hwMesh = new THREE.Mesh(new THREE.PlaneGeometry(buildingLen + 150, 60), new THREE.MeshLambertMaterial({ color: hwColor }));
+      hwMesh.rotation.x = -Math.PI / 2;
+      hwMesh.position.set(inp.buildingX + buildingLen / 2, 0.02, highwayY - 30);
+      scene.add(hwMesh);
       
-      const craneBaseGeo = new THREE.CylinderGeometry(4, 5, 2, 16);
+      // Lane closure indicator (near lanes)
+      if (inp.highwayLaneClosure) {
+        const closedLaneMesh = new THREE.Mesh(new THREE.PlaneGeometry(buildingLen + 100, 25), new THREE.MeshLambertMaterial({ color: 0x5a5a3a, transparent: true, opacity: 0.6 }));
+        closedLaneMesh.rotation.x = -Math.PI / 2;
+        closedLaneMesh.position.set(inp.buildingX + buildingLen / 2, 0.08, highwayY - 12);
+        scene.add(closedLaneMesh);
+      }
+      
+      for (let lx = inp.buildingX - 50; lx < buildingLen + 50; lx += 20) {
+        const mark = new THREE.Mesh(new THREE.PlaneGeometry(10, 0.5), new THREE.MeshBasicMaterial({ color: 0xffff00 }));
+        mark.rotation.x = -Math.PI / 2;
+        mark.position.set(lx, 0.1, highwayY - 30);
+        scene.add(mark);
+      }
+
+      // Other trees
+      for (const t of inp.otherTrees) {
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(1, 1.5, t.height * 0.6, 8), new THREE.MeshLambertMaterial({ color: 0x8b4513 }));
+        trunk.position.set(t.x, t.height * 0.3, t.y);
+        scene.add(trunk);
+        const canopy = new THREE.Mesh(new THREE.SphereGeometry(t.radius, 12, 10), new THREE.MeshLambertMaterial({ color: 0x228b22 }));
+        canopy.position.set(t.x, t.height - t.radius * 0.3, t.y);
+        scene.add(canopy);
+      }
+
+      // Crane footprint (outriggers)
+      const fw = inp.footprintW || 20, fd = inp.footprintD || 16;
+      const fpGeo = new THREE.PlaneGeometry(fw, fd);
+      const fpMat = new THREE.MeshBasicMaterial({ color: 0x4a9eff, transparent: true, opacity: 0.3 });
+      const fpMesh = new THREE.Mesh(fpGeo, fpMat);
+      fpMesh.rotation.x = -Math.PI / 2;
+      fpMesh.position.set(craneX, 0.15, craneY);
+      scene.add(fpMesh);
+      
+      // Footprint outline
+      const fpOutlineGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(fw, 0.5, fd));
+      const fpOutline = new THREE.LineSegments(fpOutlineGeo, new THREE.LineBasicMaterial({ color: 0x4a9eff }));
+      fpOutline.position.set(craneX, 0.25, craneY);
+      scene.add(fpOutline);
+
+      // Crane body
       const craneMat = new THREE.MeshLambertMaterial({ color: 0x4a9eff });
-      craneMesh = new THREE.Mesh(craneBaseGeo, craneMat);
+      craneMesh = new THREE.Mesh(new THREE.CylinderGeometry(4, 5, 2, 16), craneMat);
       craneMesh.position.set(craneX, 1, craneY);
       scene.add(craneMesh);
-      
-      const cranePoleGeo = new THREE.CylinderGeometry(1, 1.5, pivotHeight, 8);
-      const cranePole = new THREE.Mesh(cranePoleGeo, craneMat);
+      const cranePole = new THREE.Mesh(new THREE.CylinderGeometry(1, 1.5, pivotHeight, 8), craneMat);
       cranePole.position.set(craneX, pivotHeight / 2, craneY);
       scene.add(cranePole);
-      
-      const pivotGeo = new THREE.SphereGeometry(2, 16, 12);
-      const pivotMesh = new THREE.Mesh(pivotGeo, craneMat);
-      pivotMesh.position.set(craneX, pivotHeight, craneY);
-      scene.add(pivotMesh);
-      
+      const pivotSphere = new THREE.Mesh(new THREE.SphereGeometry(2, 16, 12), craneMat);
+      pivotSphere.position.set(craneX, pivotHeight, craneY);
+      scene.add(pivotSphere);
+
+      // Boom
       if (result && result.boomLength > 0) {
-        const boomPoints = [
-          new THREE.Vector3(craneX, pivotHeight, craneY),
-          new THREE.Vector3(acPos.x, result.tipHeight, acPos.y)
-        ];
-        const boomGeo = new THREE.BufferGeometry().setFromPoints(boomPoints);
-        const boomMat = new THREE.LineBasicMaterial({ 
-          color: result.reachable ? 0x60a5fa : 0xff6b6b,
-          linewidth: 2
-        });
-        boomLine = new THREE.Line(boomGeo, boomMat);
-        scene.add(boomLine);
-        
-        const loadLinePoints = [
-          new THREE.Vector3(acPos.x, result.tipHeight, acPos.y),
-          new THREE.Vector3(acPos.x, acPos.z, acPos.y)
-        ];
-        const loadLineGeo = new THREE.BufferGeometry().setFromPoints(loadLinePoints);
-        const loadLineMat = new THREE.LineBasicMaterial({ color: 0xfbbf24 });
-        const loadLine = new THREE.Line(loadLineGeo, loadLineMat);
-        scene.add(loadLine);
+        const boomGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(craneX, pivotHeight, craneY), new THREE.Vector3(acPos.x, result.tipHeight, acPos.y)]);
+        scene.add(new THREE.Line(boomGeo, new THREE.LineBasicMaterial({ color: result.reachable ? 0x60a5fa : 0xff6b6b })));
+        const loadGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(acPos.x, result.tipHeight, acPos.y), new THREE.Vector3(acPos.x, acPos.z, acPos.y)]);
+        scene.add(new THREE.Line(loadGeo, new THREE.LineBasicMaterial({ color: 0xfbbf24 })));
       }
-      
-      const reachData = generateReachabilityMap(inputs);
+
+      // Reachability map
+      const reachData = generateReachabilityMap(inp);
       const reachGeo = new THREE.BufferGeometry();
-      const positions = new Float32Array(reachData.points);
-      const colorsArr = new Float32Array(reachData.colors);
-      
-      reachGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      reachGeo.setAttribute('color', new THREE.BufferAttribute(colorsArr, 4));
-      
-      const reachMat = new THREE.PointsMaterial({
-        size: reachData.gridSize * 1.2,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.8,
-        sizeAttenuation: true
-      });
-      
-      reachabilityMesh = new THREE.Points(reachGeo, reachMat);
-      scene.add(reachabilityMesh);
+      reachGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(reachData.points), 3));
+      reachGeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(reachData.colors), 4));
+      scene.add(new THREE.Points(reachGeo, new THREE.PointsMaterial({ size: reachData.gridSize * 1.0, vertexColors: true, transparent: true, sizeAttenuation: true })));
     }
 
-    function draw2D(inputs, result) {
+    function draw2D(inp, result) {
       const canvas = document.getElementById('canvas-2d');
       const ctx = canvas.getContext('2d');
-      
       const dpr = window.devicePixelRatio || 1;
-      const displayWidth = canvas.clientWidth;
-      const displayHeight = canvas.clientHeight;
-      
-      canvas.width = displayWidth * dpr;
-      canvas.height = displayHeight * dpr;
+      const w = canvas.clientWidth, h = canvas.clientHeight;
+      canvas.width = w * dpr; canvas.height = h * dpr;
       ctx.scale(dpr, dpr);
-      
-      ctx.clearRect(0, 0, displayWidth, displayHeight);
-      ctx.fillStyle = '#1a1a1a';
-      ctx.fillRect(0, 0, displayWidth, displayHeight);
-      
+      ctx.fillStyle = '#1a1a1a'; ctx.fillRect(0, 0, w, h);
       if (!result || !result.boomLength) return;
-      
-      const {
-        craneX, craneY, pivotHeight, safetyMargin,
-        treeX, treeY, treeHeight, ignoreTree
-      } = inputs;
-      
-      const acPos = getACPosition(inputs);
-      const unitBounds = getUnitBounds(inputs);
-      
-      const padding = { left: 50, right: 20, top: 20, bottom: 35 };
-      const drawWidth = displayWidth - padding.left - padding.right;
-      const drawHeight = displayHeight - padding.top - padding.bottom;
-      
-      const maxDist = result.horizDistance + 20;
-      const maxHeight = Math.max(result.tipHeight + 5, treeHeight + 5, inputs.twoStoryHeight + 10);
-      
-      const scaleX = drawWidth / maxDist;
-      const scaleY = drawHeight / maxHeight;
-      const scale = Math.min(scaleX, scaleY);
-      
-      const baseX = padding.left;
-      const baseY = displayHeight - padding.bottom;
-      
-      function toX(d) { return baseX + d * scale; }
-      function toY(h) { return baseY - h * scale; }
-      
-      const dx = acPos.x - craneX;
-      const dy = acPos.y - craneY;
+
+      const { craneX, craneY, pivotHeight, safetyMargin, bermY, bermWidth, bermHeight } = inp;
+      const acPos = result.acPos || getACPosition(inp);
+      const unitBounds = getUnitBounds(inp);
+      const padding = { left: 40, right: 12, top: 12, bottom: 25 };
+      const drawW = w - padding.left - padding.right, drawH = h - padding.top - padding.bottom;
+      const maxDist = result.horizDistance + 12, maxHt = Math.max(result.tipHeight + 5, inp.twoStoryHeight + 8);
+      const scale = Math.min(drawW / maxDist, drawH / maxHt);
+      const baseX = padding.left, baseY = h - padding.bottom;
+      const toX = d => baseX + d * scale, toY = ht => baseY - ht * scale;
+      const dx = acPos.x - craneX, dy = acPos.y - craneY;
       const totalDist = Math.sqrt(dx * dx + dy * dy);
-      const dirX = dx / totalDist;
-      const dirY = dy / totalDist;
-      
-      ctx.strokeStyle = '#444';
-      ctx.fillStyle = '#666';
-      ctx.font = '9px -apple-system, sans-serif';
-      ctx.textAlign = 'center';
-      
-      for (let d = 0; d <= maxDist; d += 25) {
-        ctx.beginPath();
-        ctx.moveTo(toX(d), baseY);
-        ctx.lineTo(toX(d), baseY + 4);
-        ctx.stroke();
-        ctx.fillText(d.toString(), toX(d), baseY + 14);
-      }
-      
+      const dirX = dx / totalDist, dirY = dy / totalDist;
+
+      ctx.strokeStyle = '#444'; ctx.fillStyle = '#666'; ctx.font = '7px sans-serif'; ctx.textAlign = 'center';
+      for (let d = 0; d <= maxDist; d += 25) { ctx.beginPath(); ctx.moveTo(toX(d), baseY); ctx.lineTo(toX(d), baseY + 3); ctx.stroke(); ctx.fillText(d.toString(), toX(d), baseY + 10); }
       ctx.textAlign = 'right';
-      for (let h = 0; h <= maxHeight; h += 10) {
-        ctx.beginPath();
-        ctx.moveTo(baseX - 4, toY(h));
-        ctx.lineTo(baseX, toY(h));
-        ctx.stroke();
-        ctx.fillText(h.toString(), baseX - 6, toY(h) + 3);
-      }
-      
-      ctx.strokeStyle = '#888';
-      ctx.beginPath();
-      ctx.moveTo(baseX, baseY);
-      ctx.lineTo(toX(maxDist), baseY);
-      ctx.stroke();
-      
-      for (const unit of unitBounds) {
-        const corners = [
-          { x: unit.x, y: unit.y },
-          { x: unit.x + unit.width, y: unit.y },
-          { x: unit.x + unit.width, y: unit.y + unit.depth },
-          { x: unit.x, y: unit.y + unit.depth }
-        ];
-        
-        let minDist = Infinity, maxDistUnit = 0;
-        for (const corner of corners) {
-          const toCorner = { x: corner.x - craneX, y: corner.y - craneY };
-          const proj = toCorner.x * dirX + toCorner.y * dirY;
-          if (proj > 0) {
-            minDist = Math.min(minDist, proj);
-            maxDistUnit = Math.max(maxDistUnit, proj);
-          }
-        }
-        
-        if (minDist < totalDist && maxDistUnit > 0 && minDist < Infinity) {
-          const color = unit.stories === 2 ? 'rgba(22, 163, 74, 0.6)' : 'rgba(34, 197, 94, 0.6)';
-          ctx.fillStyle = color;
-          ctx.fillRect(toX(Math.max(0, minDist)), toY(unit.height), 
-                       (Math.min(maxDistUnit, totalDist) - Math.max(0, minDist)) * scale, 
-                       unit.height * scale);
+      for (let ht = 0; ht <= maxHt; ht += 10) { ctx.beginPath(); ctx.moveTo(baseX - 3, toY(ht)); ctx.lineTo(baseX, toY(ht)); ctx.stroke(); ctx.fillText(ht.toString(), baseX - 4, toY(ht) + 2); }
+      ctx.strokeStyle = '#888'; ctx.beginPath(); ctx.moveTo(baseX, baseY); ctx.lineTo(toX(maxDist), baseY); ctx.stroke();
+
+      for (const u of unitBounds) {
+        const corners = [{ x: u.x, y: u.yNorth }, { x: u.x + u.width, y: u.yNorth }, { x: u.x + u.width, y: u.ySouth }, { x: u.x, y: u.ySouth }];
+        let minD = Infinity, maxD = 0;
+        for (const c of corners) { const proj = (c.x - craneX) * dirX + (c.y - craneY) * dirY; if (proj > 0) { minD = Math.min(minD, proj); maxD = Math.max(maxD, proj); } }
+        if (minD < totalDist && maxD > 0 && minD < Infinity) {
+          ctx.fillStyle = u.stories === 2 ? 'rgba(22,163,74,0.6)' : 'rgba(34,197,94,0.6)';
+          ctx.fillRect(toX(Math.max(0, minD)), toY(u.height), (Math.min(maxD, totalDist) - Math.max(0, minD)) * scale, u.height * scale);
         }
       }
-      
-      ctx.fillStyle = '#f97316';
-      ctx.fillRect(toX(totalDist) - 4, toY(acPos.z), 8, inputs.unitHeight * scale);
-      
-      if (!ignoreTree && treeHeight > 0) {
-        const toTree = { x: treeX - craneX, y: treeY - craneY };
-        const treeDist = toTree.x * dirX + toTree.y * dirY;
-        
-        if (treeDist > 0 && treeDist < totalDist) {
-          ctx.strokeStyle = '#8b4513';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.moveTo(toX(treeDist), baseY);
-          ctx.lineTo(toX(treeDist), toY(treeHeight));
-          ctx.stroke();
-          
-          ctx.fillStyle = '#228b22';
-          ctx.beginPath();
-          ctx.arc(toX(treeDist), toY(treeHeight), 5, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.lineWidth = 1;
-        }
-      }
-      
-      ctx.fillStyle = '#4a9eff';
-      ctx.beginPath();
-      ctx.arc(toX(0), toY(pivotHeight), 4, 0, Math.PI * 2);
-      ctx.fill();
-      
-      ctx.strokeStyle = result.reachable ? '#60a5fa' : '#ff6b6b';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(toX(0), toY(pivotHeight));
-      ctx.lineTo(toX(totalDist), toY(result.tipHeight));
-      ctx.stroke();
-      
-      ctx.strokeStyle = '#fbbf24';
-      ctx.beginPath();
-      ctx.moveTo(toX(totalDist), toY(result.tipHeight));
-      ctx.lineTo(toX(totalDist), toY(acPos.z));
-      ctx.stroke();
+
+      ctx.fillStyle = '#f97316'; ctx.fillRect(toX(totalDist) - 3, toY(acPos.z), 6, inp.unitHeight * scale);
+      ctx.fillStyle = '#4a9eff'; ctx.beginPath(); ctx.arc(toX(0), toY(pivotHeight), 3, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = result.reachable ? '#60a5fa' : '#ff6b6b'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(toX(0), toY(pivotHeight)); ctx.lineTo(toX(totalDist), toY(result.tipHeight)); ctx.stroke();
+      ctx.strokeStyle = '#fbbf24'; ctx.beginPath(); ctx.moveTo(toX(totalDist), toY(result.tipHeight)); ctx.lineTo(toX(totalDist), toY(acPos.z)); ctx.stroke();
       ctx.lineWidth = 1;
-      
-      ctx.fillStyle = '#4a9eff';
-      ctx.font = '10px -apple-system, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(`${result.boomLength.toFixed(0)} ft @ ${result.boomAngleDeg.toFixed(1)}°`, 
-                   toX(totalDist / 2), toY(pivotHeight + (result.tipHeight - pivotHeight) / 2) - 5);
+      ctx.fillStyle = '#4a9eff'; ctx.font = '8px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(`${result.boomLength.toFixed(0)}ft @ ${result.boomAngleDeg.toFixed(1)}°`, toX(totalDist / 2), toY(pivotHeight + (result.tipHeight - pivotHeight) / 2) - 3);
     }
 
     function update() {
-      const inputs = getInputs();
-      const result = calculateReach(inputs, inputs.craneX, inputs.craneY);
-      
-      document.getElementById('boom-length-value').textContent = 
-        result.boomLength ? result.boomLength.toFixed(1) : '—';
-      document.getElementById('boom-angle-value').textContent = 
-        result.boomAngleDeg ? result.boomAngleDeg.toFixed(1) + '°' : '—';
-      document.getElementById('horiz-distance-value').textContent = 
-        result.horizDistance ? result.horizDistance.toFixed(1) : '—';
-      document.getElementById('reachable-value').textContent = 
-        result.reachable ? 'YES' : 'NO';
-      
-      const reachableItem = document.getElementById('reachable-item');
-      reachableItem.className = 'result-item ' + (result.reachable ? 'reachable' : 'not-reachable');
-      
-      let detailHtml = `<strong>Limiting factor:</strong> ${result.limitingObstruction || 'N/A'}`;
-      if (result.reason) {
-        detailHtml += `<br><span class="fail">${result.reason}</span>`;
+      const inp = getInputs();
+      const result = calculateReach(inp, inp.craneX, inp.craneY);
+
+      document.getElementById('boom-length-value').textContent = result.boomLength ? result.boomLength.toFixed(1) : '—';
+      document.getElementById('boom-angle-value').textContent = result.boomAngleDeg ? result.boomAngleDeg.toFixed(1) + '°' : '—';
+      document.getElementById('horiz-distance-value').textContent = result.horizDistance ? result.horizDistance.toFixed(1) : '—';
+      document.getElementById('reachable-value').textContent = result.reachable ? (result.warnings?.length ? 'CAUTION' : 'YES') : 'NO';
+
+      const reachItem = document.getElementById('reachable-item');
+      reachItem.className = 'result-item ' + (result.reachable ? (result.warnings?.length ? 'caution' : 'reachable') : 'not-reachable');
+
+      let detail = `<strong>Zone:</strong> ${result.zone?.zone || 'N/A'} | <strong>Limiting:</strong> ${result.limitingObstruction || 'N/A'}`;
+      if (result.reason) detail += `<br><span class="fail">${result.reason}</span>`;
+      if (result.warnings?.length) {
+        for (const w of result.warnings) detail += `<br><span class="warn">⚠ ${w}</span>`;
       }
-      if (result.clearanceChecks && result.clearanceChecks.length > 0) {
-        detailHtml += '<br><strong>Clearances checked:</strong>';
-        for (const check of result.clearanceChecks) {
-          detailHtml += `<br>• ${check.name}: ${check.height}ft + ${inputs.safetyMargin}ft margin at ${check.distance}ft`;
-        }
+      if (result.clearanceChecks?.length > 0) {
+        detail += '<br><strong>Clearances:</strong>';
+        for (const c of result.clearanceChecks.slice(0, 4)) detail += ` ${c.name}(${c.height}ft@${c.distance}ft)`;
+        if (result.clearanceChecks.length > 4) detail += ` +${result.clearanceChecks.length - 4} more`;
       }
-      document.getElementById('clearance-detail').innerHTML = detailHtml;
-      
-      update3DScene(inputs, result);
-      draw2D(inputs, result);
+      document.getElementById('clearance-detail').innerHTML = detail;
+
+      update3DScene(inp, result);
+      draw2D(inp, result);
     }
 
-    inputIds.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.addEventListener('input', update);
-    });
+    inputIds.forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('input', update); });
 
-    initUnits();
-    renderUnitsGrid();
-    init3D();
-    update();
+    initUnits(); renderUnitsGrid(); renderLampPosts(); renderWalkwayTrees(); renderOtherTrees(); init3D(); update();
   </script>
 </body>
 </html>
